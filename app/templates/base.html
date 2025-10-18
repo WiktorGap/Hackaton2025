@@ -1,12 +1,39 @@
-{% extends "bootstrap/base.html" %}
-{% block title %}Wiktor Gapiński – About Me{% endblock %}
-
-{% block head %}
-{{ super() }}
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-{% endblock %}
-
-{% block content %}
-<p>Siema</p>
-{% endblock %}
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8">
+    <title>StatPłock – {% block page_title %}Home{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{{ url_for('static', filename='plock.ico') }}" type="image/x-icon">
+    <style>x
+      body, html { height: 100%; }
+      .centered-container {
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+      }
+      nav a {
+        margin: 0 15px;
+        text-decoration: none;
+        font-weight: bold;
+        color: #007bff;
+      }
+      nav a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="{{ url_for('main.home') }}">Strona główna</a>
+      <a href="{{ url_for('main.ludzie') }}">Ludzie</a>
+      <a href="{{ url_for('main.transport') }}">Transport</a>
+      <a href="{{ url_for('main.srodowisko') }}">Środowisko</a>
+      <a href="{{ url_for('main.budzet') }}">Budżet</a>
+    </nav>
+    <div class="centered-container">
+      {% block page_content %}{% endblock %}
+    </div>
+  </body>
+</html>

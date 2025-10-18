@@ -1,9 +1,23 @@
-from . import main
-from datetime import datetime , timezone 
-from flask import render_template, session, redirect, url_for, make_response, request, flash, current_app
+from flask import Blueprint, render_template
 
+main = Blueprint('main', __name__)
 
-@main.route('/',methods=['GET','POST'])
-def index():
-    current_time = datetime.now(timezone.utc)
-    return render_template('base.html', current_time=current_time)
+@main.route('/')
+def home():
+    return render_template('home.html')
+
+@main.route('/ludzie')
+def ludzie():
+    return render_template('ludzie.html')
+
+@main.route('/transport')
+def transport():
+    return render_template('transport.html')
+
+@main.route('/srodowisko')
+def srodowisko():
+    return render_template('srodowisko.html')
+
+@main.route('/budzet')
+def budzet():
+    return render_template('budzet.html')
