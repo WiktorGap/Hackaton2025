@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanData Płock | Finanse Miasta</title>
+    <style>
+        :root {
+            --color-text: #1C1C1E; 
+            --color-background: #F2F2F7; 
+            --color-card: #FFFFFF;
+            --color-border: #D0D7DE; 
+            
+            /* AKCENTY BUDŻETOWE */
+            --color-primary: #FF9500; /* Jasna Pomarańcza/Złoto (Główny akcent) */
+            --color-budzet-dark: #FF4500; /* Głęboka Pomarańcza (Akcent dla NAV/Headers) */
+            
+            --color-negative: #cf222e; 
+            --color-positive: #34C759;
+            --color-ai: #FF4500; /* AI w kolorze Budżetu */
+        }
+        
+        /* Base Style Overrides (z Transportu) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.4;
+            color: var(--color-text);
+            background-color: var(--color-background);
+            margin: 0;
+            padding-top: 75px; 
+            font-size: 16px; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding:20px 0 20px;
+        }
+        .page-title h1 { 
+            font-size: 2.8em; 
+            color: darkgray; 
+            letter-spacing: -1px; 
+        }
+
+        /* Nav Bar - Używamy tej samej struktury, zmieniamy tylko kolor akcentu w ::after na #ff7800 */
+        .navigation-wrap {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background-color: var(--color-card);
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 1px 3px rgba(27, 31, 35, 0.08);
+            padding: 10px 0;
+            transition: all 0.3s ease-out;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 40px;
+        }
+
+        .navbar-brand {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: black;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand span {
+            color: var(--color-budzet-dark); /* Akcent budżetowy w logo */
+            margin-left: 5px;
+        }
+        
+        .navbar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-grow: 1;
+        }
+        
+        .nav-item {
+            position: relative;
+            margin-left: 20px;
+        }
+
+        .nav-link {
+            color: var(--color-text);
+            font-weight: 500;
+            text-decoration: none;
+            padding: 8px 0;
+            display: block;
+            transition: color 0.2s linear;
+        }
+
+        .nav-item:hover .nav-link {
+            color: var(--color-primary);
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--color-budzet-dark); /* Kolor akcentu Budżetu */
+            transform: scaleX(0);
+            transition: transform 0.3s ease-out;
+        }
+
+        .nav-item:hover::after, .nav-item.active::after {
+            transform: scaleX(1);
+        }
+        /* KONIEC NAV BAR */
+
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Zmieniono, aby oba wykresy były równe */
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .card {
+            background-color: var(--color-card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            height: 100%; /* Utrzymanie równych kart */
+        }
+        .card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1); 
+        }
+
+        /* Wyróżnienie AI/Insight (Pomarańcz) */
+        .ai-analysis {
+            grid-column: 1 / span 2;
+            background-color: rgba(255, 69, 0, 0.08); 
+            border: 1px solid var(--color-budzet-dark);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .ai-analysis strong { color: var(--color-budzet-dark); font-weight: 600; }
+        .ai-analysis p { color: #48484A; }
+
+        /* Kluczowe Metryki (Summary Box w Budżecie) */
+        .summary-metric { 
+            display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--color-border); 
+        }
+        .summary-value { font-size: 1.6em; font-weight: 700; letter-spacing: -0.5px; color: var(--color-text);}
+        .negative { color: var(--color-negative); }
+        .positive { color: var(--color-positive); }
+        .budget-value { color: var(--color-budzet-dark); font-size: 1.6em; font-weight: 700; } /* Kwoty Budżetowe */
+
+
+        /* WIZUALIZACJA ZASTĘPCZA */
+        .chart-placeholder {
+            height: 380px;
+            background-color: var(--color-background);
+            border: 2px dashed var(--color-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-weight: 600;
+            font-size: 1.2em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        /* Akordeon i Footer (Takie same style jak w Transport) */
+        .accordion {
+            margin-top: 30px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background-color: white;
+        }
+        .accordion-header {
+            color: var(--color-budzet-dark); /* Zmieniony kolor akordeonu */
+            background-color: var(--color-card);
+            border-bottom: 0.5px solid var(--color-border);
+            padding: 15px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        .accordion-header span { transform: rotate(0deg); transition: transform 0.3s ease-out; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-content.open { max-height: 500px; } 
+
+        .documentation-section { padding: 24px; }
+        .documentation-section h3 { color: var(--color-primary); }
+        .app-footer {
+            width: 100%; background-color: var(--color-card); border-top: 1px solid var(--color-border); padding: 30px 0 20px; color: var(--color-text); font-size: 0.9em; margin-top: 40px; 
+        }
+        .footer-content {
+            display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap; width: 92%; max-width: 1300px; margin: 0 auto;
+        }
+
+
+        .nav-item.has-dropdown {
+    position: relative;
+    /* Upewnia się, że menu rozwijane jest pozycjonowane względem tego elementu */
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%; /* Rozpoczyna się tuż pod elementem nadrzędnym */
+    left: 0;
+    min-width: 200px;
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 8px 8px; /* Zaokrąglenie tylko na dole */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Ukrycie menu domyślnie */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease-in-out;
+    z-index: 1050; /* Zapewnienie, że jest nad innymi elementami */
+}
+
+.nav-item.has-dropdown:hover > .dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-menu li a {
+    color: var(--color-text);
+    font-weight: 400;
+    padding: 10px 15px;
+    display: block;
+    text-decoration: none;
+    transition: background-color 0.2s;
+    font-size: 0.95em;
+}
+
+.dropdown-menu li a:hover {
+    background-color: var(--color-background); /* Podświetlenie tła po najechaniu */
+    color: var(--color-primary); /* Akcent kolorystyczny */
+}
+    </style>
+</head>
+<body>
+    
+    <div class="navigation-wrap">
+        <div class="container">
+            <nav class="navbar">  
+                
+                <a class="navbar-brand" href="/">
+                    <img src="{{ url_for('static', filename='plocklogo.png') }}" alt="Płock Logo">
+                    Miejskie<span> Centrum &nbsp;</span> Danych &nbsp;
+                </a>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item has-dropdown">
+                       <a class="nav-link" href="/">Demografia</a>
+                       <ul class="dropdown-menu">
+                           <li><a href="/demografia/wiek">Struktura Wieku</a></li>
+                           <li><a href="/demografia/ruch-naturalny">Ruch Naturalny</a></li>
+                           <li><a href="/demografia/migracje">Saldo Migracji</a></li>
+                       </ul>
+                    </li>
+                    <li class="nav-item has-dropdown">
+                        <a class="nav-link" href="/srodowisko">Środowisko</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/srodowisko/pm10">Jakość Powietrza</a></li>
+                            <li><a href="/srodowisko/woda">Zużycie Wody</a></li>
+                            <li><a href="/srodowisko/odpady">Gospodarka Odpadami</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown"> 
+                        <a class="nav-link" href="/transport">Transport</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/transport/ruch">Natężenie Ruchu</a></li>
+                            <li><a href="/transport/komunikacja">Komunikacja Miejska</a></li>
+                            <li><a href="/transport/wypadki">Statystyki Wypadków</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown active">
+                        <a class="nav-link" href="/budzet">Budżet</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/budzet/dochody">Struktura Dochodów</a></li>
+                            <li><a href="/budzet/wydatki">Struktura Wydatków</a></li>
+                            <li><a href="/budzet/inwestycje">Inwestycje Miejskie</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>      
+        </div>
+    </div>
+
+<div class="container">
+   
+    <div class="page-title">
+        <h1>Transparentne Finanse Miasta ({{ budget_data.year }})</h1>
+        <p>Analiza struktury dochodów i wydatków Płocka, z uwzględnieniem deficytu i stabilności budżetowej.</p>
+    </div>
+
+    <div class="ai-analysis">
+        <strong>💸 Analiza Budżetu | Wskaźnik ({{ budget_data.year }})</strong>
+        <p>{{ budget_data.podsumowanie.komentarz_ai }}</p>
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <div class="card">
+            <h2>{{ budget_data.dochody.naglowek }}</h2>
+            <p class="description">{{ budget_data.dochody.opis }}</p>
+            
+            <div class="chart-placeholder">
+                MIEJSCE NA WYKRES PIERŚCIENIOWY<br>
+                DOCHODY
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>{{ budget_data.wydatki.naglowek }}</h2>
+            <p class="description">{{ budget_data.wydatki.opis }}</p>
+            
+            <div class="chart-placeholder">
+                MIEJSCE NA WYKRES PIERŚCIENIOWY<br>
+                WYDATKI
+            </div>
+        </div>
+
+        <div class="card" style="grid-column: 1 / span 2; margin-top: -10px;">
+             <h2>Wskaźniki Kluczowe (Podsumowanie)</h2>
+             
+            <div class="summary-metric">
+                <p>Łączne Planowane Dochody</p>
+                <span class="budget-value">{{ budget_data.podsumowanie.wartosc_budzetu }}</span>
+            </div>
+
+            <div class="summary-metric">
+                <p>Łączne Planowane Wydatki</p>
+                <span class="budget-value">{{ budget_data.podsumowanie.wartosc_budzetu }}</span>
+            </div>
+
+            <div class="summary-metric">
+                <p>Deficyt Budżetowy</p>
+                <span class="summary-value negative">{{ budget_data.podsumowanie.deficyt }}</span>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div class="accordion">
+        
+        <div class="accordion-header active" data-target="content-docs-budzet">
+            📋 Pliki Źródłowe i Uchwały Budżetowe <span>›</span>
+        </div>
+        <div class="accordion-content open" id="content-docs-budzet">
+             <div class="documentation-section" style="padding: 24px;">
+                <h3 style="margin-top: 0; color: var(--color-budzet-dark); font-size: 1.2em;">Kluczowe Zasoby Informacji</h3>
+                <ul style="list-style: none; padding: 0;">
+                    {% for file in documentation_files %}
+                    <li style="padding: 8px 0; border-bottom: 0.5px solid var(--color-border);">
+                        <strong>{{ file.name }}</strong> &mdash; {{ file.desc }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+    </div> 
+</div>
+
+<footer class="app-footer" style="background-color: white;">
+    <div class="container footer-content">
+        <div class="footer-branding">
+            <p class="brand-name">Miejskie Dane Płock</p>
+            <p class="project-info">Projekt Miejski</p>
+            <p class="copyright">&copy; 2025 Zespół Synapse Dev. Wszystkie prawa zastrzeżone.</p>
+        </div>
+        
+        <div class="footer-links-group">
+            <h3>Nawigacja</h3>
+            <ul class="footer-links">
+                <li><a href="/">Demografia</a></li>
+                <li><a href="/srodowisko">Środowisko</a></li>
+                <li><a href="/transport">Transport</a></li>
+                <li><a href="/budzet">Budżet</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-links-group">
+            <h3>Zasoby</h3>
+            <ul class="footer-links">
+                <li><a href="#">API GUS BDL</a></li>
+                <li><a href="/export">Eksport Danych</a></li>
+                <li><a href="#">Polityka Prywatności</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // 1. LOGIKA AKORDEONU (Używamy tego samego JS co w Transport)
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const targetId = header.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const isActive = content.classList.contains('open');
+                
+                // Zamykanie innych akordeonów, jeśli otwarte
+                document.querySelectorAll('.accordion-content.open').forEach(openContent => {
+                    if (openContent.id !== targetId) {
+                        openContent.classList.remove('open');
+                        document.querySelector(`[data-target="${openContent.id}"] span`).style.transform = 'rotate(0deg)';
+                    }
+                });
+
+                // Otwieranie/Zamykanie bieżącego
+                content.classList.toggle('open');
+                header.querySelector('span').style.transform = isActive ? 'rotate(0deg)' : 'rotate(90deg)';
+            });
+        });
+        
+        // Inicjalizacja stanu rotacji strzałek
+        document.querySelectorAll('.accordion-header span').forEach(span => {
+            const header = span.parentNode;
+            const targetId = header.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            
+            if (content.classList.contains('open')) {
+                span.style.transform = 'rotate(90deg)';
+            } else {
+                span.style.transform = 'rotate(0deg)';
+            }
+        });
+    });
+
+    // 2. USUNIĘTO RENDERING WYKRESÓW - WYKRESY ZASTĘPCZE SĄ W UŻYCIU
+</script>
+
+</body>
+</html>
