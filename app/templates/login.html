@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<title>Logowanie</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+</head>
+<body>
+
+<!-- Lewy górny róg -->
+<div class="container-fluid p-3">
+    <a href="{{ url_for('main.home') }}" class="btn btn-secondary">Strona główna</a>
+</div>
+
+<!-- Główny kontener -->
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h2 class="text-primary">Witaj ponownie! Zaloguj się, aby kontynuować.</h2>
+        <!-- Rejestracja pod napisem -->
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card p-4">
+                <form>
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="username" placeholder="Nazwa użytkownika" required>
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" type="password" name="password" placeholder="Hasło" required>
+                    </div>
+                    <button class="btn btn-primary btn-block" type="submit">Zaloguj się</button>
+                </form>
+                <!-- Nowy napis pod przyciskiem -->
+                <div class="text-center mt-3">
+                    <p>Nie masz konta? <a href="#">Zarejestruj się</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
