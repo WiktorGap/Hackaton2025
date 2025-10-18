@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System zarządzania bazami danych</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>System zarządzania bazami danych MSSQL</h1>
+        
+        <form method="POST" action="/" id="dataForm">
+            <div class="form-group">
+                <label for="database">1. Wybór bazy:</label>
+                <select name="database" id="database" required onchange="updateTables()">
+                    <option value="">-- Wybierz bazę danych --</option>
+                    {% for db_name in databases.keys() %}
+                    <option value="{{ db_name }}" {% if selected_db == db_name %}selected{% endif %}>
+                        {{ db_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="table">2. Tabela:</label>
+                <select name="table" id="table" required onchange="updateColumns()">
+                    <option value="">-- Wybierz tabelę --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="columns">3. Kolumna:</label>
+                <select name="columns" id="columns" multiple required size="5">
+                    <option value="">-- Wybierz kolumny --</option>
+                </select>
+                <small>Przytrzymaj Ctrl (Windows) lub Cmd (Mac) aby wybrać wiele kolumn</small>
+            </div>
+            
+            <button type="submit" class="submit-btn">Przycisk</button>
+        </form>
+        
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        {% if data %}
+        <div class="results">
+            <h2>Wyniki:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in selected_columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% for column in selected_columns %}
+                        <td>{{ row[column] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        const databases = {{ databases|tojson }};
+        
+        function updateTables() {
+            const dbSelect = document.getElementById('database');
+            const tableSelect = document.getElementById('table');
+            const columnsSelect = document.getElementById('columns');
+            
+            tableSelect.innerHTML = '<option value="">-- Wybierz tabelę --</option>';
+            columnsSelect.innerHTML = '<option value="">-- Wybierz kolumny --</option>';
+            
+            const selectedDb = dbSelect.value;
+            if (selectedDb && databases[selectedDb]) {
+                const table = databases[selectedDb].table;
+                const option = document.createElement('option');
+                option.value = table;
+                option.textContent = table;
+                tableSelect.appendChild(option);
+            }
+        }
+        
+        function updateColumns() {
+            const dbSelect = document.getElementById('database');
+            const columnsSelect = document.getElementById('columns');
+            
+            columnsSelect.innerHTML = '';
+            
+            const selectedDb = dbSelect.value;
+            if (selectedDb && databases[selectedDb]) {
+                const columns = databases[selectedDb].columns;
+                columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = column;
+                    option.textContent = column;
+                    columnsSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Inicjalizacja przy załadowaniu strony
+        window.onload = function() {
+            const dbSelect = document.getElementById('database');
+            if (dbSelect.value) {
+                updateTables();
+                updateColumns();
+            }
+        };
+    </script>
+</body>
+</html>
