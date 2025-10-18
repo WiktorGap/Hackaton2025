@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanData Płock | Mobilność i Transport</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transport.css') }}">
+    <style>
+        :root {
+    --color-text: #1C1C1E; 
+    --color-background: #F2F2F7; 
+    --color-card: #FFFFFF;
+    --color-border: #D0D7DE; 
+    
+    /* AKCENTY TRANSPORTOWE */
+    --color-primary: #007AFF; 
+    --color-transport-dark: #FF4500; /* Głęboka Pomarańcza (Akcent główny dla NAV/Headers) */
+    --color-transport-light: #FF9500; /* Jasna Pomarańcza (Akcent na danych) */
+    
+    --color-negative: #cf222e; /* Użyjemy dla wypadków */
+    --color-positive: #34C759;
+    --color-ai: #FF4500; /* AI w kolorze Transportu */
+}
+
+/* Base Style Overrides */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.4;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    margin: 0;
+    padding-top: 75px; 
+    font-size: 16px; 
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    width: 92%;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding:20px 0 20px;
+}
+.page-title h1 { 
+    font-size: 2.8em; 
+    color: var(--color-transport-dark); 
+    letter-spacing: -1px; 
+}
+
+/* ================================================= */
+/* 1. UNIKALNY NAV BAR (Segmentowy Przełącznik) */
+/* ================================================= */
+
+.navigation-wrap {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background-color: var(--color-card);
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 1px 3px rgba(27, 31, 35, 0.08);
+            padding: 10px 0;
+            transition: all 0.3s ease-out;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 40px;
+        }
+
+        .navbar-brand {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: black;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand span {
+            color: #ff7800;
+            margin-left: 5px;
+        }
+        
+        .navbar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-grow: 1;
+        }
+        
+        .nav-item {
+            position: relative;
+            margin-left: 20px;
+        }
+
+        .nav-link {
+            color: var(--color-text);
+            font-weight: 500;
+            text-decoration: none;
+            padding: 8px 0;
+            display: block;
+            transition: color 0.2s linear;
+        }
+
+        .nav-item:hover .nav-link {
+            color: var(--color-primary);
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff7800;
+            transform: scaleX(0);
+            transition: transform 0.3s ease-out;
+        }
+
+        .nav-item:hover::after, .nav-item.active::after {
+            transform: scaleX(1);
+        }
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+.card {
+    background-color: var(--color-card);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.card:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1); 
+}
+
+/* Wyróżnienie AI/Insight (Pomarańcz) */
+.ai-analysis {
+    grid-column: 1 / span 3;
+    background-color: rgba(255, 69, 0, 0.08); 
+    border: 1px solid var(--color-transport-dark);
+    padding: 20px;
+    border-radius: 12px;
+}
+.ai-analysis strong { color: var(--color-transport-dark); font-weight: 600; }
+.ai-analysis p { color: #48484A; }
+
+/* Kluczowe Metryki */
+.summary-value { font-size: 1.6em; font-weight: 700; letter-spacing: -0.5px; }
+
+/* Akordeon */
+.accordion {
+    margin-top: 30px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background-color: white;
+}
+.accordion-header {
+    color: var(--color-transport-dark); 
+    background-color: var(--color-card);
+    border-bottom: 0.5px solid var(--color-border);
+}
+
+/* Tabela */
+.data-table th { background-color: #F8F8F8; color: var(--color-text); font-weight: 600; }
+
+/* Przyciski */
+.button-action {
+    background-color: var(--color-transport-dark); 
+    color: var(--color-card);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+}
+.button-action:hover {
+    background-color: #E63900;
+}
+
+.app-footer {
+    width: 100%;
+    background-color: var(--color-card); /* Używamy bieli, aby stworzyć spójną kartę */
+    border-top: 1px solid var(--color-border);
+    padding: 30px 0 20px;
+    color: var(--color-text);
+    font-size: 0.9em;
+    margin-top: 40px; /* Odsunięcie od reszty treści */
+    
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+    /* Resetowanie kontenera dla stopki (jeśli jest używany ten sam, to musi być wyrównany) */
+    width: 92%;
+    max-width: 1300px;
+    margin: 0 auto;
+    
+    
+}
+
+.footer-branding {
+    max-width: 300px;
+    flex-grow: 1;
+}
+
+.brand-name {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--color-iot-dark);
+}
+
+.project-info, .copyright {
+    color: #6D6D72; /* Szary tekst systemowy */
+    margin: 3px 0;
+}
+
+.footer-links-group {
+    min-width: 120px;
+}
+
+.footer-links-group h3 {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 10px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links a {
+    color: var(--color-primary); /* Linki w kolorze systemowym */
+    text-decoration: none;
+    display: block;
+    padding: 3px 0;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: var(--color-iot-dark); /* Hover w kolorze akcentu Środowiska */
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .footer-branding {
+        order: 3; /* Przesunięcie na dół na mobilnych */
+    }
+}
+
+.nav-item.has-dropdown {
+    position: relative;
+    /* Upewnia się, że menu rozwijane jest pozycjonowane względem tego elementu */
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%; /* Rozpoczyna się tuż pod elementem nadrzędnym */
+    left: 0;
+    min-width: 200px;
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 8px 8px; /* Zaokrąglenie tylko na dole */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    
+    /* Ukrycie menu domyślnie */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease-in-out;
+    z-index: 1050; /* Zapewnienie, że jest nad innymi elementami */
+}
+
+.nav-item.has-dropdown:hover > .dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-menu li a {
+    color: var(--color-text);
+    font-weight: 400;
+    padding: 10px 15px;
+    display: block;
+    text-decoration: none;
+    transition: background-color 0.2s;
+    font-size: 0.95em;
+}
+
+.dropdown-menu li a:hover {
+    background-color: var(--color-background); /* Podświetlenie tła po najechaniu */
+    color: var(--color-primary); /* Akcent kolorystyczny */
+}
+    </style>
+</head>
+<body>
+    
+    <div class="navigation-wrap">
+        <div class="container">
+            <nav class="navbar">  
+                
+                <a class="navbar-brand" href="/">
+                    Miejskie<span> Centrum &nbsp;</span> Danych &nbsp;
+                </a>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item has-dropdown {% if request.path == '/' %}active{% endif %}">
+                       <a class="nav-link" href="/">Demografia</a>
+                       <ul class="dropdown-menu">
+                           <li><a href="/demografia/wiek">Struktura Wieku</a></li>
+                           <li><a href="/demografia/ruch-naturalny">Ruch Naturalny</a></li>
+                           <li><a href="/demografia/migracje">Saldo Migracji</a></li>
+                       </ul>
+                    </li>
+                    <li class="nav-item has-dropdown {% if request.path == '/srodowisko' %}active{% endif %}">
+                        <a class="nav-link" href="/srodowisko">Środowisko</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/srodowisko/pm10">Jakość Powietrza</a></li>
+                            <li><a href="/srodowisko/woda">Zużycie Wody</a></li>
+                            <li><a href="/srodowisko/odpady">Gospodarka Odpadami</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown {% if request.path == '/transport' %}active{% endif %}"> 
+                        <a class="nav-link" href="/transport">Transport</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/transport/ruch">Natężenie Ruchu</a></li>
+                            <li><a href="/transport/komunikacja">Komunikacja Miejska</a></li>
+                            <li><a href="/transport/wypadki">Statystyki Wypadków</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown {% if request.path == '/budzet' %}active{% endif %}">
+                        <a class="nav-link" href="/budzet">Budżet</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/budzet/dochody">Struktura Dochodów</a></li>
+                            <li><a href="/budzet/wydatki">Struktura Wydatków</a></li>
+                            <li><a href="/budzet/inwestycje">Inwestycje Miejskie</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>      
+        </div>
+    </div>
+<div class="container">
+   
+    <div class="page-title">
+        <h1>Mobilność, Ruch i Bezpieczeństwo</h1>
+        <p>Analiza natężenia ruchu drogowego, punktualności komunikacji miejskiej oraz statystyki wypadków.</p>
+    </div>
+
+    <div class="ai-analysis">
+        <strong>🚗 Analiza Transportowa | Wskaźnik ({{ summary.najnowszy_rok }})</strong>
+        <p>{{ summary.komentarz_ai }}</p>
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <div class="card" style="grid-column: 1 / span 2;">
+            <h2>📈 Średnie Natężenie Ruchu (Trend Miesięczny)</h2>
+            <div style="height: 380px;">
+                <canvas id="transportChart1"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Wskaźniki Kluczowe</h2>
+            
+            <div class="summary-metric">
+                <p>Punktualność KM Płock</p>
+                <span class="summary-value positive">{{ summary.punktualnosc_km }}%</span>
+                <hr>
+            </div>
+
+            <div class="summary-metric">
+                <p>Wypadki (Ostatni miesiąc)</p>
+                <span class="summary-value {% if summary.wypadki_miesiac|int > 5 %}negative{% else %}positive{% endif %}">
+                    {{ summary.wypadki_miesiac }}
+                </span>
+                <hr>
+            </div>
+
+            <div class="summary-metric">
+                <p>Średnia Prędkość w Szczycie</p>
+                <span class="summary-value neutral">{{ summary.srednia_predkosc }} km/h</span>
+                <hr>
+            </div>
+            
+            <div class="summary-metric">
+                <p>Długość Ścieżek Rowerowych</p>
+                <span class="summary-value positive">{{ summary.sciezki_km }} km</span>
+                <hr>
+            </div>
+       
+          <a href="#" class="button-action" style="width: 100%; text-align: center; PADDING-BLOCK: 3px;">Mapa Zdarzeń i Remontów</a>
+         
+            
+        </div>
+        
+        <div class="card" style="grid-column: 1 / span 3;">
+            <h2>🚌 Wykorzystanie Komunikacji Miejskiej (Pasażerowie/Miesiąc)</h2>
+            <div style="height: 250px;">
+                <canvas id="transportChart2"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="accordion">
+        
+        <div class="accordion-header active" data-target="content-table-transport">
+            Szczegółowe Dane Ruchu i Bezpieczeństwa <span>›</span>
+        </div>
+        <div class="accordion-content open" id="content-table-transport">
+            <div class="data-table-section">
+                <p style="margin-bottom: 10px; color: #6D6D72; font-size: 0.9em;">Dane o natężeniu ruchu i wypadkach pobrane z bazy SQL.</p>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for header in display_headers %}
+                            <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in display_data %}
+                        <tr>
+                            {% for header in display_headers %}
+                            <td>{{ row[header] }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="accordion-header" data-target="content-docs-transport">
+            📋 Plany i Strategie Mobilności (Raporty Urzędu Miasta) <span>›</span>
+        </div>
+        <div class="accordion-content" id="content-docs-transport">
+            <div class="documentation-section" style="padding: 0;">
+                <h3 style="margin-top: 0; color: var(--color-primary); font-size: 1.2em;">Kluczowe Zasoby Informacji</h3>
+                <ul style="list-style: none; padding: 0;">
+                    {% for file in documentation_files %}
+                    <li style="padding: 8px 0; border-bottom: 0.5px solid var(--color-border);">
+                        <strong>{{ file.name }}</strong> &mdash; {{ file.desc }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div> 
+</div>
+
+<footer class="app-footer"style="background-color: white;">
+    <div class="container footer-content">
+        <div class="footer-branding">
+            <p class="brand-name">Miejskie Dane Płock</p>
+            <p class="project-info">Projekt Miejski</p>
+            <p class="copyright">&copy; 2025 Zespół Synapse Dev. Wszystkie prawa zastrzeżone.</p>
+        </div>
+        
+        <div class="footer-links-group">
+            <h3>Nawigacja</h3>
+            <ul class="footer-links">
+                <li><a href="/">Demografia</a></li>
+                <li><a href="/srodowisko">Środowisko</a></li>
+                <li><a href="/transport">Transport</a></li>
+                
+                <!-- <a class="nav-link" href="{{url_for('budzet')}}">budzet</a> -->
+            </ul>
+        </div>
+
+        <div class="footer-links-group">
+            <h3>Zasoby</h3>
+            <ul class="footer-links">
+                <li><a href="#">API GUS BDL</a></li>
+                <li><a href="/export">Eksport Danych</a></li>
+                <li><a href="#">Polityka Prywatności</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // 1. LOGIKA AKORDEONU (Kod z index.html)
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const targetId = header.getAttribute('data-target');
+            const content = document.getElementById(targetId);
+            const isActive = content.classList.contains('open');
+            
+            document.querySelectorAll('.accordion-content.open').forEach(openContent => {
+                if (openContent.id !== targetId) {
+                    openContent.classList.remove('open');
+                    document.querySelector(`[data-target="${openContent.id}"] span`).style.transform = 'rotate(0deg)';
+                }
+            });
+
+            content.classList.toggle('open');
+            header.querySelector('span').style.transform = isActive ? 'rotate(0deg)' : 'rotate(90deg)';
+        });
+    });
+    document.querySelector('.accordion-header.active span').style.transform = 'rotate(90deg)';
+    document.querySelectorAll('.accordion-header span').forEach(span => {
+        if (!span.parentNode.classList.contains('active')) {
+            span.style.transform = 'rotate(0deg)';
+        }
+    });
+
+
+    // 2. RENDERING WYKRESU RUCHU (Chart 1)
+    const chartData1 = JSON.parse('{{ chart_data_1|safe }}');
+    const ctx1 = document.getElementById('transportChart1').getContext('2d');
+    
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: chartData1.labels,
+            datasets: [{
+                label: 'Śr. Ruch Drogowy (Samochody/dzień)',
+                data: chartData1.data,
+                borderColor: '#FF4500', /* Głęboka pomarańcz/czerwień - ruch */
+                backgroundColor: 'rgba(255, 69, 0, 0.2)', 
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2,
+                pointRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: false, grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false } },
+                x: { grid: { display: false } }
+            },
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(28, 28, 30, 0.9)', titleFont: { weight: '600' } } }
+        }
+    });
+
+    // 3. RENDERING WYKRESU KOMUNIKACJI (Chart 2)
+    const chartData2 = JSON.parse('{{ chart_data_2|safe }}');
+    const ctx2 = document.getElementById('transportChart2').getContext('2d');
+    
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: chartData2.labels,
+            datasets: [{
+                label: 'Pasażerowie KM Płock',
+                data: chartData2.data,
+                backgroundColor: 'rgba(9, 105, 218, 0.6)', /* Apple Blue */
+                borderColor: '#0969da',
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false } }, x: { grid: { display: false } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
+
+</body>
+</html>
