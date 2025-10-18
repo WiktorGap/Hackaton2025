@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wykroczenia Drogowe - Wykres</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Statystyki Wykroczeń Drogowych</h1>
+    <div class="chart-container">
+        {% if wykres %}
+            <img src="data:image/png;base64,{{ wykres }}" alt="Wykres wykroczeń drogowych">
+        {% else %}
+            <p>Nie udało się wygenerować wykresu.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
