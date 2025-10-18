@@ -5,35 +5,87 @@
     <title>StatPłock – {% block page_title %}Home{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{{ url_for('static', filename='plock.ico') }}" type="image/x-icon">
-    <style>x
-      body, html { height: 100%; }
-      .centered-container {
-        height: 100%;
+    <style>
+      /* CSS z poprzednich wiadomości */
+      body, html {
+        margin: 0;
+        min-height: 100vh;
+        background: #f5faff;
+        font-family: 'Segoe UI', Arial, sans-serif;
+      }
+      .top-bar {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: #5ab4e7;
+        color: #fff;
+        padding: 14px 30px;
+        border-radius: 18px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        box-shadow: 0 2px 12px rgba(80,160,220,0.10);
+        letter-spacing: 1.2px;
+        z-index: 3;
+      }
+      .home-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #1b6ef3;
+        color: #fff;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 13px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(27,110,243,0.12);
+        transition: background 0.14s;
+        text-decoration: none;
+        z-index: 3;
+      }
+      .home-btn:hover {
+        background: #14469a;
+      }
+      .center-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .block-row {
+        display: flex;
+        flex-direction: row;
+        gap: 36px;
+        margin-top: 24px;
+      }
+      .main-block {
+        background: linear-gradient(135deg,#e6ffe9 60%, #bde5c7 110%);
+        color: #125d36;
+        border-radius: 18px;
+        width: 180px;
+        height: 170px;
         display: flex;
         justify-content: center;
         align-items: center;
-        flex-direction: column;
-        text-align: center;
-      }
-      nav a {
-        margin: 0 15px;
+        font-size: 1.22rem;
+        font-weight: 600;
+        box-shadow: 0 3px 16px rgba(20,80,44,0.11);
+        border: 2px solid #d2f5dc;
+        transition: box-shadow 0.16s, transform 0.16s;
+        cursor: pointer;
         text-decoration: none;
-        font-weight: bold;
-        color: #007bff;
       }
-      nav a:hover { text-decoration: underline; }
+      .main-block:hover {
+        box-shadow: 0 10px 34px rgba(44,102,44,0.19);
+        transform: translateY(-4px) scale(1.03);
+        background: linear-gradient(135deg,#c6f7e2 60%, #96e8b7 110%);
+      }
     </style>
   </head>
   <body>
-    <nav>
-      <a href="{{ url_for('main.home') }}">Strona główna</a>
-      <a href="{{ url_for('main.ludzie') }}">Ludzie</a>
-      <a href="{{ url_for('main.transport') }}">Transport</a>
-      <a href="{{ url_for('main.srodowisko') }}">Środowisko</a>
-      <a href="{{ url_for('main.budzet') }}">Budżet</a>
-    </nav>
-    <div class="centered-container">
-      {% block page_content %}{% endblock %}
-    </div>
+    <a href="{{ url_for('main.home') }}" class="top-bar">StatPłock</a>
+    {% block content %}{% endblock %}
   </body>
 </html>
