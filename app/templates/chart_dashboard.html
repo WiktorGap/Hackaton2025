@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title if page_title else 'Wizualizacja Danych' }}</title>
+    <style>
+        /* Stylizacja jest przeniesiona z Twojego oryginalnego szablonu i lekko ulepszona */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6; /* Lekko zmieniony kolor tła */
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); /* Nowy, świeży gradient */
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        /* Nowy styl dla sekcji statystyk */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border-bottom: 3px solid #1abc9c; /* Akcent kolorystyczny */
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50; /* Ciemny kolor dla lepszej czytelności */
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        /* Sekcja wykresów - bez zmian, bo jest dobrze zdefiniowana */
+        .chart-container {
+            background: white;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .chart-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #444;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .chart-description {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .chart-image {
+            width: 100%;
+            text-align: center;
+        }
+        .chart-image img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .error-message {
+            background: #fdecea;
+            color: #c0392b;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            border-left: 4px solid #c0392b;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #95a5a6;
+            font-size: 0.9em;
+            border-top: 1px solid #ecf0f1;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ page_title if page_title else 'Panel Wizualizacji Danych' }}</h1>
+            <p>
+                {% if page_title == 'Porównanie Budżetów Obywatelskich Miast' %}
+                    Analiza kluczowych wskaźników budżetów obywatelskich w Polsce
+                {% elif page_title == 'Budżet Obywatelski Płocka' %}
+                    Głęboka analiza danych Budżetu Obywatelskiego Płocka ({{ stats.data_range if stats.data_range else 'Brak zakresu dat' }})
+                {% elif page_title == 'Posiedzenia Rady Miasta Płocka' %}
+                    Analiza aktywności Rady Miasta Płocka w zakresie podejmowanych uchwał
+                {% else %}
+                    Wizualizacje oparte na danych z bazy MSSQL
+                {% endif %}
+            </p>
+        </div>
+
+        {% if error %}
+            <div class="error-message">
+                <strong>Wystąpił błąd podczas pobierania danych:</strong> {{ error }} 😔
+            </div>
+        {% else %}
+            {% if stats %}
+            <div class="chart-title">Kluczowe Wskaźniki</div>
+            <div class="stats-container">
+                {% for label, value in stats.items() %}
+                    <div class="stat-card">
+                        <div class="stat-number">{{ value }}</div>
+                        <div class="stat-label">
+                            {{ label | replace('_', ' ') | title }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if charts %}
+                {% for chart in charts %}
+                <div class="chart-container">
+                    <div class="chart-title">📊 {{ chart.title }}</div>
+                    <div class="chart-description">{{ chart.description }}</div>
+                    <div class="chart-image">
+                        <img src="data:image/png;base64,{{ chart.chart_data }}" alt="{{ chart.title }}">
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="error-message">
+                    Nie znaleziono żadnych wykresów do wyświetlenia. Sprawdź konfigurację.
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="footer">
+            <p>Wygenerowano automatycznie | Źródło danych: Baza MSSQL 'Hackaton'</p>
+        </div>
+    </div>
+</body>
+</html>

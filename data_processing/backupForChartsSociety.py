@@ -250,3 +250,212 @@
 #         'chart_name': chart_name,
 #         'chart_data': chart_base64
 #     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def get_budget_data():
+#     """Pobiera dane z tabeli Budzet z bazy danych"""
+#     try:
+#         conn = pyodbc.connect(connection_string_)
+#         query = "SELECT [Miasto], [Zplanowana kwota], [na mieszkańca], [Zgłoszone projekty], [Głosujący na projekty] FROM [Hackaton].[dbo].[Budzet]"
+#         df = pd.read_sql(query, conn)
+#         conn.close()
+        
+#         # Konwersja danych na właściwe typy
+#         df['Zplanowana kwota'] = pd.to_numeric(df['Zplanowana kwota'], errors='coerce')
+#         df['na mieszkańca'] = pd.to_numeric(df['na mieszkańca'], errors='coerce')
+#         df['Zgłoszone projekty'] = pd.to_numeric(df['Zgłoszone projekty'], errors='coerce')
+#         df['Głosujący na projekty'] = pd.to_numeric(df['Głosujący na projekty'], errors='coerce')
+        
+#         return df
+#     except Exception as e:
+#         print(f"Błąd podczas pobierania danych: {e}")
+#         return None
+
+# def create_bar_chart(df):
+#     """Tworzy wykres słupkowy - zaplanowane kwoty według miast"""
+#     plt.figure(figsize=(14, 8))
+    
+#     # Sortowanie danych dla lepszej czytelności
+#     df_sorted = df.sort_values('Zplanowana kwota', ascending=False)
+    
+#     bars = plt.bar(df_sorted['Miasto'], df_sorted['Zplanowana kwota'] / 1000000, 
+#                    color='skyblue', edgecolor='navy', alpha=0.7)
+    
+#     plt.title('Zaplanowane kwoty budżetu obywatelskiego w miastach', 
+#               fontsize=16, fontweight='bold', pad=20)
+#     plt.xlabel('Miasta', fontsize=12)
+#     plt.ylabel('Zaplanowana kwota (mln zł)', fontsize=12)
+#     plt.xticks(rotation=45, ha='right')
+#     plt.grid(axis='y', alpha=0.3)
+    
+#     # Dodanie wartości na słupkach
+#     for bar in bars:
+#         height = bar.get_height()
+#         plt.text(bar.get_x() + bar.get_width()/2., height,
+#                 f'{height:.1f}M',
+#                 ha='center', va='bottom', fontsize=9)
+    
+#     plt.tight_layout()
+    
+#     # Konwersja do base64
+#     buf = io.BytesIO()
+#     plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+#     buf.seek(0)
+#     chart_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+#     buf.close()
+#     plt.close()
+    
+#     return chart_base64
+
+# def create_pie_chart(df):
+#     """Tworzy wykres kołowy - udział miast w liczbie głosujących"""
+#     plt.figure(figsize=(10, 10))
+    
+#     # Sortowanie i wybór top 8 miast + pozostałe
+#     df_sorted = df.sort_values('Głosujący na projekty', ascending=False)
+#     top_cities = df_sorted.head(8)
+#     others_sum = df_sorted.iloc[8:]['Głosujący na projekty'].sum()
+    
+#     # Przygotowanie danych dla wykresu kołowego
+#     labels = list(top_cities['Miasto']) + ['Pozostałe miasta']
+#     sizes = list(top_cities['Głosujący na projekty']) + [others_sum]
+    
+#     # Kolory
+#     colors = plt.cm.Set3(range(len(labels)))
+    
+#     # Tworzenie wykresu kołowego
+#     wedges, texts, autotexts = plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%',
+#                                        startangle=90, textprops={'fontsize': 10})
+    
+#     # Poprawa wyglądu procentów
+#     for autotext in autotexts:
+#         autotext.set_color('black')
+#         autotext.set_fontweight('bold')
+    
+#     plt.title('Udział miast w liczbie głosujących na projekty', 
+#               fontsize=16, fontweight='bold', pad=20)
+#     plt.axis('equal')  # Zapewnia, że wykres jest okrągły
+    
+#     plt.tight_layout()
+    
+#     # Konwersja do base64
+#     buf = io.BytesIO()
+#     plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+#     buf.seek(0)
+#     chart_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+#     buf.close()
+#     plt.close()
+    
+#     return chart_base64
+
+# def create_projects_per_capita_chart(df):
+#     """Tworzy wykres słupkowy - projekty na 100k mieszkańców"""
+#     plt.figure(figsize=(14, 8))
+    
+#     # Sortowanie danych
+#     df_sorted = df.sort_values('Zgłoszone projekty', ascending=False)
+    
+#     bars = plt.bar(df_sorted['Miasto'], df_sorted['Zgłoszone projekty'], 
+#                    color='lightcoral', edgecolor='darkred', alpha=0.7)
+    
+#     plt.title('Liczba zgłoszonych projektów na 100 tysięcy mieszkańców', 
+#               fontsize=16, fontweight='bold', pad=20)
+#     plt.xlabel('Miasta', fontsize=12)
+#     plt.ylabel('Liczba projektów na 100k mieszkańców', fontsize=12)
+#     plt.xticks(rotation=45, ha='right')
+#     plt.grid(axis='y', alpha=0.3)
+    
+#     # Dodanie wartości na słupkach
+#     for bar in bars:
+#         height = bar.get_height()
+#         plt.text(bar.get_x() + bar.get_width()/2., height,
+#                 f'{height:.0f}',
+#                 ha='center', va='bottom', fontsize=9)
+    
+#     plt.tight_layout()
+    
+#     # Konwersja do base64
+#     buf = io.BytesIO()
+#     plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+#     buf.seek(0)
+#     chart_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+#     buf.close()
+#     plt.close()
+    
+#     return chart_base64
+
+# @main.route('/budget',methods=['GET'])
+# def display_budget_charts():
+#     """Główna trasa wyświetlająca wykresy budżetowe"""
+#     df = get_budget_data()
+    
+#     if df is None or df.empty:
+#         return render_template('budget_charts.html', 
+#                              error="Nie udało się pobrać danych z bazy",
+#                              charts=[])
+    
+#     # Generowanie wykresów
+#     charts = []
+    
+#     # Wykres 1: Słupkowy - zaplanowane kwoty
+#     bar_chart = create_bar_chart(df)
+#     charts.append({
+#         'title': 'Zaplanowane kwoty budżetu obywatelskiego',
+#         'description': 'Porównanie zaplanowanych kwot budżetu obywatelskiego w milionach złotych',
+#         'chart_data': bar_chart
+#     })
+    
+#     # Wykres 2: Kołowy - udział w głosujących
+#     pie_chart = create_pie_chart(df)
+#     charts.append({
+#         'title': 'Udział miast w liczbie głosujących',
+#         'description': 'Procentowy udział miast w ogólnej liczbie głosujących na projekty',
+#         'chart_data': pie_chart
+#     })
+    
+#     # Wykres 3: Słupkowy - projekty na 100k mieszkańców
+#     projects_chart = create_projects_per_capita_chart(df)
+#     charts.append({
+#         'title': 'Liczba projektów na 100 tysięcy mieszkańców',
+#         'description': 'Aktywność mieszkańców mierzona liczbą zgłoszonych projektów',
+#         'chart_data': projects_chart
+#     })
+    
+#     # Dodatkowe statystyki
+#     stats = {
+#         'total_cities': len(df),
+#         'total_budget': f"{df['Zplanowana kwota'].sum() / 1000000:.1f}",
+#         'avg_budget_per_capita': f"{df['na mieszkańca'].mean():.1f}",
+#         'total_voters': f"{df['Głosujący na projekty'].sum():,}".replace(',', ' ')
+#     }
+    
+#     return render_template('budget_charts.html', charts=charts, stats=stats, error=None)
+
+
+
