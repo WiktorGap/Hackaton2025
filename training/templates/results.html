@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wyniki prognozy</title>
+</head>
+<body>
+    <h1>Prognozowana ludność Płocka</h1>
+    <table border="1">
+        <tr>
+            <th>Rok</th>
+            <th>Przewidywana liczba mieszkańców</th>
+        </tr>
+        {% for p in predictions %}
+        <tr>
+            <td>{{ p.rok }}</td>
+            <td>{{ "{:,}".format(p.prognoza).replace(",", " ") }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <a href="/">← Powrót</a>
+</body>
+</html>
