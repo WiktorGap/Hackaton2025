@@ -25,7 +25,6 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            padding: 0;
         }
 
         header {
@@ -45,6 +44,13 @@
             padding: 30px;
         }
 
+        .info-message {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
         .error {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             color: white;
@@ -55,30 +61,23 @@
             text-align: center;
         }
 
-        .info-message {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.1em;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        .charts-container {
+            display: flex;
+            flex-direction: column;
             gap: 25px;
         }
 
         .chart-card {
-            background: white;
+            background: #f8f9fa;
             border-radius: 12px;
-            padding: 20px;
+            padding: 25px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             border: 1px solid #e1e5e9;
             transition: all 0.3s ease;
         }
 
         .chart-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
@@ -97,26 +96,32 @@
             border-bottom: 2px solid #3498db;
         }
 
-        .chart-container {
+        .chart-image {
             text-align: center;
-            padding: 10px;
+            padding: 15px;
+            cursor: pointer;
         }
 
-        .chart-container img {
+        .chart-image img {
             max-width: 100%;
             height: auto;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border: 1px solid #e1e5e9;
+            transition: transform 0.3s ease;
+        }
+
+        .chart-image img:hover {
+            transform: scale(1.02);
         }
 
         .no-data {
-            text-align: center;
-            color: #7f8c8d;
-            font-style: italic;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             padding: 40px;
-            background: #f8f9fa;
             border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             margin: 20px 0;
         }
 
@@ -150,6 +155,72 @@
             box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
 
+        /* Modal do powiększania wykresów */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            position: relative;
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: zoomIn 0.3s;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 1001;
+        }
+
+        .close:hover {
+            color: #3498db;
+            transform: scale(1.1);
+        }
+
+        .modal-title {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: translateY(-50%) scale(0.9); }
+            to { transform: translateY(-50%) scale(1); }
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.6em;
@@ -159,9 +230,19 @@
                 padding: 20px;
             }
             
-            .charts-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
+            .chart-card {
+                padding: 20px;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+                max-height: 80%;
+            }
+            
+            .close {
+                font-size: 30px;
+                top: 10px;
+                right: 20px;
             }
         }
     </style>
@@ -181,15 +262,15 @@
             
             {% if charts_data %}
                 <div class="info-message">
-                    Wygenerowano {{ charts_data|length }} wykresów z bazy danych.
+                    Wygenerowano {{ charts_data|length }} wykresów z bazy danych. Kliknij na wykres, aby go powiększyć.
                 </div>
                 
-                <div class="charts-grid">
+                <div class="charts-container">
                     {% for chart in charts_data %}
                         <div class="chart-card">
                             <div class="table-name">Tabela: {{ chart.table_name }}</div>
                             <div class="chart-title">{{ chart.chart_name }}</div>
-                            <div class="chart-container">
+                            <div class="chart-image" onclick="openModal('{{ chart.chart_data }}', '{{ chart.chart_name }}')">
                                 <img src="data:image/png;base64,{{ chart.chart_data }}" alt="Wykres {{ chart.chart_name }}">
                             </div>
                         </div>
@@ -209,8 +290,52 @@
         </footer>
     </div>
     
+    <!-- Modal do powiększania wykresów -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-title" id="modalTitle"></div>
+    </div>
+    
     <div class="back-button">
         <a href="{{ url_for('main.index') }}">Powrót do strony głównej</a>
     </div>
+
+    <script>
+        // Funkcja do otwierania modala z powiększonym wykresem
+        function openModal(imageData, title) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            modal.style.display = "block";
+            modalImg.src = "data:image/png;base64," + imageData;
+            modalTitle.textContent = title;
+            
+            // Dodajemy obsługę klawisza ESC
+            document.addEventListener('keydown', handleKeyPress);
+        }
+        
+        // Funkcja do zamykania modala
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = "none";
+            document.removeEventListener('keydown', handleKeyPress);
+        }
+        
+        // Obsługa klawisza ESC
+        function handleKeyPress(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        }
+        
+        // Zamykanie modala po kliknięciu w tło
+        document.getElementById('imageModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>

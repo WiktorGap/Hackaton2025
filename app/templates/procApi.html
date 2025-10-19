@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jakość Powietrza - Monitorowanie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .location-info {
+            text-align: center;
+            padding: 15px;
+            background: #34495e;
+            color: white;
+            font-size: 1.1em;
+        }
+
+        .city-search {
+            text-align: center;
+            padding: 15px;
+            background: #ecf0f1;
+        }
+
+        .city-search input {
+            padding: 10px 15px;
+            border: 2px solid #3498db;
+            border-radius: 25px;
+            font-size: 1em;
+            width: 300px;
+            max-width: 80%;
+            margin-right: 10px;
+        }
+
+        .city-search button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .city-search button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* Sekcja głównych wskaźników */
+        .main-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .aqi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 3px solid #3498db;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .aqi-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .aqi-value {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .aqi-level {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .weather-icon {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .weather-icon img {
+            width: 80px;
+            height: 80px;
+        }
+
+        .temperature {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .weather-detail {
+            text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+
+        /* Sekcja składników powietrza */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .component-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .component-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .component-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .component-unit {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .component-desc {
+            color: #7f8c8d;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        /* Sekcja informacyjna */
+        .info-section {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 20px;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 8px;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+
+        .back-button {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            font-weight: 500;
+        }
+
+        .back-button a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .main-indicators {
+                grid-template-columns: 1fr;
+            }
+            
+            .components-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .weather-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .components-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .city-search input {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Monitor Jakości Powietrza</h1>
+        </header>
+
+        <div class="location-info">
+            📍 <strong>{{ air_data.city }}, {{ air_data.country }}</strong>
+        </div>
+
+        <div class="city-search">
+            <form method="GET" action="{{ url_for('main.air_quality') }}">
+                <input type="text" name="city" placeholder="Wpisz nazwę miasta (po angielsku)" value="{{ air_data.city }}">
+                <button type="submit">🔍 Sprawdź</button>
+            </form>
+        </div>
+
+        <div class="content">
+            <!-- Główne wskaźniki -->
+            <div class="main-indicators">
+                <div class="aqi-card" >
+                    <h3>🌫️ Indeks Jakości Powietrza (AQI)</h3>
+                    <div class="aqi-value" >
+                        {{ air_data.aqi.value }}
+                    </div>
+                    <div class="aqi-level" >
+                        {{ air_data.aqi.emoji }} {{ air_data.aqi.level }}
+                    </div>
+                    <p><strong>{{ air_data.aqi.description }}</strong></p>
+                </div>
+
+                <div class="weather-card">
+                    <div class="weather-icon">
+                        {% if air_data.weather.icon %}
+                            <img src="http://openweathermap.org/img/w/{{ air_data.weather.icon }}.png" alt="{{ air_data.weather.description }}">
+                        {% else %}
+                            <span style="font-size: 4em;">⛅</span>
+                        {% endif %}
+                    </div>
+                    <div class="temperature">{{ air_data.weather.temp }}°C</div>
+                    <p style="text-align: center; margin: 10px 0;">Odczuwalna: {{ air_data.weather.feels_like }}°C</p>
+                    <p style="text-align: center; margin-bottom: 15px;"><strong>{{ air_data.weather.description }}</strong></p>
+                    
+                    <div class="weather-details">
+                        <div class="weather-detail">
+                            💧 Wilgotność<br>
+                            <strong>{{ air_data.weather.humidity }}%</strong>
+                        </div>
+                        <div class="weather-detail">
+                            📊 Ciśnienie<br>
+                            <strong>{{ air_data.weather.pressure }} hPa</strong>
+                        </div>
+                        <div class="weather-detail">
+                            💨 Wiatr<br>
+                            <strong>{{ air_data.weather.wind_speed }} m/s</strong>
+                        </div>
+                        <div class="weather-detail">
+                            👁️ Widoczność<br>
+                            <strong>{{ air_data.weather.visibility }} km</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Składniki powietrza -->
+            <h3 style="margin-bottom: 15px; color: #2c3e50;">🧪 Składniki powietrza</h3>
+            <div class="components-grid">
+                {% for key, component in air_data.components.items() %}
+                <div class="component-card">
+                    <div class="component-name">{{ component.name }}</div>
+                    <div class="component-value">{{ "%.1f"|format(component.value) }}</div>
+                    <div class="component-unit">{{ component.unit }}</div>
+                    <div class="component-desc">{{ component.description }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Informacje dodatkowe -->
+            <div class="info-section">
+                <h3>💡 Informacje o jakości powietrza</h3>
+                <p>Indeks AQI (Air Quality Index) mierzy ogólną jakość powietrza w skali 1-5. Im niższa wartość, tym lepsza jakość powietrza. 
+                PM2.5 i PM10 oznaczają pył zawieszony o różnych rozmiarach cząstek, które mogą wpływać na zdrowie.</p>
+                <p><strong>Skala AQI:</strong> 1 - Bardzo Dobry 😊 | 2 - Dobry 🙂 | 3 - Umiarkowany 😐 | 4 - Zły 😷 | 5 - Bardzo Zły ⚠️</p>
+            </div>
+
+            <div class="timestamp">
+                🕒 Ostatnia aktualizacja: {{ air_data.timestamp }}
+            </div>
+        </div>
+
+        <footer>
+            <p>Źródło danych: OpenWeatherMap API</p>
+        </footer>
+    </div>
+
+    <div class="back-button">
+        <a href="{{ url_for('main.index') }}">🏠 Powrót do strony głównej</a>
+    </div>
+</body>
+</html>

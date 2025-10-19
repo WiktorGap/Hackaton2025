@@ -1,0 +1,110 @@
+<!-- <!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wyniki prognozy</title>
+</head>
+<body>
+    <h1>Prognozowana ludność Płocka</h1>
+    <table border="1">
+        <tr>
+            <th>Rok</th>
+            <th>Przewidywana liczba mieszkańców</th>
+        </tr>
+        {% for p in predictions %}
+        <tr>
+            <td>{{ p.rok }}</td>
+            <td>{{ "{:,}".format(p.prognoza).replace(",", " ") }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <a href="/">← Powrót</a>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Analiza demograficzna Płocka</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        th {
+            background: #2c3e50;
+            color: white;
+        }
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #2c3e50;
+        }
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1a242f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prognoza ludności Płocka</h1>
+
+    <form action="/analyze" method="post">
+        <label>Podaj liczbę lat do przodu:</label>
+        <input type="number" name="years" min="1" value="1" required>
+        <button type="submit">Analizuj</button>
+    </form>
+
+    {% if predictions %}
+    <h2>Wyniki prognozy</h2>
+    <table>
+        <tr>
+            <th>Rok</th>
+            <th>Przewidywana liczba mieszkańców</th>
+        </tr>
+        {% for p in predictions %}
+        <tr>
+            <td>{{ p.rok }}</td>
+            <td>{{ "{:,}".format(p.prognoza).replace(",", " ") }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <a href="/">← Powrót</a>
+</body>
+</html>

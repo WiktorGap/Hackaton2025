@@ -360,52 +360,60 @@
 <body>
     
     <div class="navigation-wrap">
-        <div class="container">
-            <nav class="navbar">  
-                <img src="{{ url_for('static', filename='plocklogo.png') }}" alt="Płock Logo">
-                <a class="navbar-brand" href="/">
-                    Miejskie<span> Centrum &nbsp;</span> Danych &nbsp;
-                </a>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item has-dropdown {% if request.path == '/' %}active{% endif %}">
-                       <a class="nav-link" href="/">Demografia</a>
-                       <ul class="dropdown-menu">
-                           <li><a href="{{ url_for('main.displayData') }}">Dane w przyjaznej formie</a></li>
+    <div class="container">
+        <nav class="navbar">
+            <img src="{{ url_for('static', filename='plocklogo.png') }}" alt="Płock Logo">
+            <a class="navbar-brand" href="/">
+                Miejskie<span> Centrum &nbsp;</span> Danych &nbsp;
+            </a>
 
-                       </ul>
-                    </li>
-                    <li class="nav-item has-dropdown {% if request.path == '/srodowisko' %}active{% endif %}">
-                        <a class="nav-link" >Środowisko</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="/srodowisko/pm10">Jakość Powietrza</a></li>
+            <ul class="navbar-nav">
+                <li class="nav-item has-dropdown {% if request.path == '/' %}active{% endif %}">
+                    <a class="nav-link" href="/">Demografia</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('main.displayData') }}">Dane w przyjaznej formie</a></li>
+                    </ul>
+                </li>
 
-                        </ul>
-                    </li>
-                    <li class="nav-item has-dropdown {% if request.path == '/transport' %}active{% endif %}"> 
-                        <a class="nav-link" >Transport</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{{url_for('main.transChart')}}">Statystyki wykroczeń drogowych dla Płocka</a></li>
-                            <li><a href="{{url_for('main.transChart12')}}">Statystyki Wypadków drogawych</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-dropdown {% if request.path == '/budzet' %}active{% endif %}">
-                        <a class="nav-link" href="/budzet">Budżet</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('main.display_budget_plock_dashboard') }}">Statystyki dla budżetu obywatelskiego w Płocku</a></li>
-                            <li><a href="{{ url_for('main.display_budget_comparative') }}">Budżet Płocka na tle innych miast</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>      
-        </div>
+                <li class="nav-item has-dropdown {% if request.path == '/srodowisko' %}active{% endif %}">
+                    <a class="nav-link" href="/srodowisko">Środowisko</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="https://aqicn.org/map/plock/pl">Jakość Powietrza</a></li>
+                    </ul>
+
+ 
+
+                <li class="nav-item has-dropdown {% if request.path == '/transport' %}active{% endif %}">
+                    <a class="nav-link" >Transport</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{url_for('main.transChart')}}">Statystyki wykroczeń drogowych dla Płocka</a></li>
+                        <li><a href="{{url_for('main.transChart12')}}">Statystyki Wypadków drogawych</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item has-dropdown {% if request.path == '/budzet' %}active{% endif %}">
+                    <a class="nav-link" href="/budzet">Budżet</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('main.display_budget_plock_dashboard') }}">Statystyki dla budżetu obywatelskiego w Płocku</a></li>
+                        <li><a href="{{ url_for('main.display_budget_comparative') }}">Budżet Płocka na tle innych miast</a></li>
+                    </ul>
+                </li>
+                               </li>
+                <li class="nav-item has-dropdown {% if request.path == '/Dane Przyszłości' %}active{% endif %}">
+                    <a class="nav-link" href="{{url_for('main.analyze')}}">Dane Przyszłości</a>
+                </li>
+
+
+            </ul>
+        </nav>
     </div>
+</div>
 
 <div class="container">
     
     <div class="page-title">
         <h1>Demografia i Finanse</h1>
-        <p>Integracja danych GUS, IoT, Transportu i Finansów dla wsparcia decyzji i transparentności.</p>
+        Integracja danych GUS, IoT, Transportu i Finansów dla wsparcia decyzji i transparentności.
     </div>
 
     <div class="ai-analysis">
@@ -416,7 +424,7 @@
     <div class="dashboard-grid">
         
         <div class="card main-grid">
-            <h2>📈 Demografia: Trend Przyrostu Naturalnego ({{ summary.lata_zakresu }})</h2>
+            <h2>📈 Demografia:  Przyrost Naturalny w Płocku ({{ summary.lata_zakresu }})</h2>
             <div style="height: 350px;">
                 <canvas id="naturalGrowthChart"></canvas>
             </div>
@@ -474,7 +482,7 @@
     
     <div class="accordion">
         
-        <div class="accordion-header active" data-target="content-table">
+        <!-- <div class="accordion-header active" data-target="content-table">
             Szczegółowe Dane GUS (Urbanistyka/Demografia) <span>▶</span>
         </div>
         <div class="accordion-content open" id="content-table">
@@ -502,7 +510,7 @@
                     <a href="/export" class="button button-primary">Eksportuj Pełne Dane do CSV</a>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="accordion-header" data-target="content-docs">
             📋 Kontekst i Dokumentacja Źródłowa (Miasta Partnerskie, API) <span>▶</span>
@@ -610,6 +618,7 @@
                 <li><a href="/srodowisko">Środowisko</a></li>
                 <li><a href="/transport">Transport</a></li>
                 <li><a href="#">Budżet</a></li>
+                <li><a href="">Dane Przyszłości</a></li>
             </ul>
         </div>
 

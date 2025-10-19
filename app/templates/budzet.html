@@ -283,7 +283,7 @@
                     <li class="nav-item has-dropdown">
                         <a class="nav-link" >Środowisko</a>
                         <ul class="dropdown-menu">
-                            <li><a href="/srodowisko/pm10">Jakość Powietrza</a></li>
+                            <li><a href="https://aqicn.org/map/plock/pl">Jakość Powietrza</a></li>
                         </ul>
                     </li>
                     <li class="nav-item has-dropdown"> 
@@ -300,6 +300,9 @@
                             <li><a href="{{ url_for('main.display_budget_comparative') }}">Budżet Płocka na tle innych miast</a></li>
                         </ul>
                     </li>
+                <li class="nav-item has-dropdown {% if request.path == '/Dane Przyszłości' %}active{% endif %}">
+                    <a class="nav-link" href="{{url_for('main.analyze')}}">Dane Przyszłości</a>
+                </li>
                 </ul>
             </nav>      
         </div>
@@ -312,10 +315,7 @@
         <p>Analiza struktury dochodów i wydatków Płocka, z uwzględnieniem deficytu i stabilności budżetowej.</p>
     </div>
 
-    <div class="ai-analysis">
-        <strong>💸 Analiza Budżetu | Wskaźnik ({{ budget_data.year }})</strong>
-        <p>{{ budget_data.podsumowanie.komentarz_ai }}</p>
-    </div>
+   
 
     <div class="dashboard-grid">
         
@@ -324,20 +324,10 @@
             <p class="description">{{ budget_data.dochody.opis }}</p>
             
             <div class="chart-placeholder">
-                MIEJSCE NA WYKRES PIERŚCIENIOWY<br>
-                DOCHODY
-            </div>
+                <img src="static/budgetPlock.jpg" >            </div>
         </div>
 
-        <div class="card">
-            <h2>{{ budget_data.wydatki.naglowek }}</h2>
-            <p class="description">{{ budget_data.wydatki.opis }}</p>
-            
-            <div class="chart-placeholder">
-                MIEJSCE NA WYKRES PIERŚCIENIOWY<br>
-                WYDATKI
-            </div>
-        </div>
+        
 
         <div class="card" style="grid-column: 1 / span 2; margin-top: -10px;">
              <h2>Wskaźniki Kluczowe (Podsumowanie)</h2>

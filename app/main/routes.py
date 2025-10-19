@@ -1,6 +1,6 @@
 from . import main
 from datetime import datetime, timezone
-from flask import render_template , Response
+from flask import render_template , Response , request
 import pyodbc
 import base64
 import io
@@ -14,6 +14,10 @@ from io import StringIO
 import json
 import csv
 from matplotlib.ticker import MaxNLocator
+import pickle
+import os 
+import requests
+
 
 connection_string_ = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
@@ -39,7 +43,7 @@ connection_string_2 = (
     r'Trusted_Connection=yes;'
 )
 
-# KONFIGURACJA WYKRESÓW DLA KONKRETNYCH TABEL
+
 CHART_CONFIGS = {
     '2.1. Powierzchnia i ludność średnik': {
         'time_series': [
@@ -90,8 +94,8 @@ CHART_CONFIGS = {
                 'colors': ['red', 'blue'],
                 'labels': ['Kobiety', 'Mężczyźni'],
                 'title': 'Wiek populacji w społeczeństwie w podziale na płeć',
-                'x_ticks_step': 5,  # Pokazuj co 5 rok
-                'width_scale': 1.5  # Szerokość wykresu
+                'x_ticks_step': 5,  
+                'width_scale': 1.5  
             }
         ]
     }
@@ -136,12 +140,12 @@ def generate_charts_for_table(df, table_name):
     """Generuje wykresy dla danej tabeli według predefiniowanych reguł"""
     charts = []
     
-    # Sprawdź czy istnieje konfiguracja dla tej tabeli
+
     if table_name in CHART_CONFIGS:
         config = CHART_CONFIGS[table_name]
         charts.extend(generate_configured_charts(df, table_name, config))
     else:
-        # Domyślne generowanie wykresów jeśli nie ma konfiguracji
+        
         charts.extend(generate_default_charts(df, table_name))
     
     return charts
@@ -150,7 +154,7 @@ def generate_configured_charts(df, table_name, config):
     """Generuje wykresy według specyficznej konfiguracji tabeli"""
     charts = []
     
-    # Pojedyncze wykresy liniowe (time series)
+
     if 'time_series' in config:
         for chart_config in config['time_series']:
             x_col = chart_config['x_column']
@@ -164,7 +168,7 @@ def generate_configured_charts(df, table_name, config):
                 if chart:
                     charts.append(chart)
     
-    # Wykresy z wieloma liniami na jednym wykresie
+
     if 'multi_line' in config:
         for multi_config in config['multi_line']:
             x_col = multi_config['x_column']
@@ -187,7 +191,7 @@ def generate_default_charts(df, table_name):
     charts = []
     numeric_columns = df.select_dtypes(include=['number']).columns.tolist()
     
-    # Jeśli mamy kolumnę 'Lata' i kolumny numeryczne
+
     if 'Lata' in df.columns and len(numeric_columns) > 0:
         for col in numeric_columns:
             if col != 'Lata':
@@ -198,7 +202,7 @@ def generate_default_charts(df, table_name):
     return charts
 
 def create_line_chart(df, x_col, y_col, table_name, title, color='blue', line_style='-'):
-    """Tworzy wykres liniowy"""
+
     try:
         plt.figure(figsize=(12, 7))
         plt.plot(df[x_col], df[y_col], marker='o', linewidth=2.5, 
@@ -217,7 +221,7 @@ def create_line_chart(df, x_col, y_col, table_name, title, color='blue', line_st
         return None
 
 def create_multi_line_chart(df, x_col, y_cols, table_name, title, colors, labels, x_ticks_step=None, width_scale=1.0):
-    """Tworzy wykres z wieloma liniami"""
+  
     try:
        
         base_width = 12
@@ -237,14 +241,14 @@ def create_multi_line_chart(df, x_col, y_cols, table_name, title, colors, labels
         plt.legend(loc='best')
       
         if x_ticks_step is not None and len(df) > x_ticks_step:
-            # Pokazuj tylko co x-tą etykietę
+            
             ticks = df[x_col][::x_ticks_step]
             plt.xticks(ticks, rotation=45, fontsize=10)
         else:
-            # Dla mniejszej liczby punktów pokazuj wszystkie etykiety
+            
             plt.xticks(rotation=45, fontsize=10)
         
-        # Zwiększ odstępy między subplotami aby zmieścić etykiety
+        
         plt.tight_layout(pad=3.0)
         
         return save_chart_to_base64(table_name, title)
@@ -254,7 +258,7 @@ def create_multi_line_chart(df, x_col, y_cols, table_name, title, colors, labels
         return None
 
 def save_chart_to_base64(table_name, chart_name):
-    """Zapisuje aktualny wykres do base64 i zamyka figure"""
+    
     buf = io.BytesIO()
     plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
     buf.seek(0)
@@ -275,18 +279,18 @@ def save_chart_to_base64(table_name, chart_name):
 
 
 def get_budget_comparative_data():
-    """Pobiera dane z tabeli Budzet (porównanie miast) z bazy danych"""
+    
     try:
         conn = pyodbc.connect(connection_string_)
         query = "SELECT * FROM [Hackaton].[dbo].[Budzet]"
         df = pd.read_sql(query, conn)
         conn.close()
         
-        # Konwersja kolumn numerycznych, ignorowanie błędów
+     
         numeric_cols = ['Zplanowana kwota', 'na mieszkańca', 'Zgłoszone projekty', 'Głosujący na projekty']
         for col in numeric_cols:
             if col in df.columns:
-                # Zamiana przecinka na kropkę i konwersja na float
+                
                 df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
                 df[col] = pd.to_numeric(df[col], errors='coerce') 
         
@@ -296,9 +300,7 @@ def get_budget_comparative_data():
         return None
     
 
-    # W pliku routes.py
 
-# ... (po funkcjach create_posiedzenia_charts lub w sekcji tworzenia wykresów)
 
 def create_comparative_budget_chart(df, y_col='na mieszkańca', title_suffix=' Budżet na Mieszkańca'):
     """Tworzy wykres słupkowy porównujący miasta, z Płockiem zaznaczonym na czerwono."""
@@ -307,8 +309,7 @@ def create_comparative_budget_chart(df, y_col='na mieszkańca', title_suffix=' B
         return None
     
     df_sorted = df.sort_values(by=y_col, ascending=False).reset_index(drop=True)
-    
-    # Określenie kolorów: czerwony dla Płocka, niebieski dla reszty
+
     colors = ['red' if miasto == 'Płock' else 'darkblue' for miasto in df_sorted['Miasto']]
     
     try:
@@ -320,8 +321,7 @@ def create_comparative_budget_chart(df, y_col='na mieszkańca', title_suffix=' B
         plt.ylabel(f'{y_col} (zł)', fontsize=12)
         plt.grid(axis='y', alpha=0.3)
         plt.xticks(rotation=45, ha='right')
-        
-        # Dodanie wartości na słupkach
+
         for bar in bars:
             height = bar.get_height()
             plt.text(bar.get_x() + bar.get_width()/2., height,
@@ -329,7 +329,7 @@ def create_comparative_budget_chart(df, y_col='na mieszkańca', title_suffix=' B
         
         plt.tight_layout()
         
-        # Zapis do base64
+      
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
         buf.seek(0)
@@ -351,7 +351,7 @@ def create_comparative_budget_chart(df, y_col='na mieszkańca', title_suffix=' B
 
 @main.route('/budget_comparative', methods=['GET'])
 def display_budget_comparative():
-    """Wyświetla wykres porównawczy budżetu obywatelskiego dla miast."""
+    
     df = get_budget_comparative_data()
     
     if df is None or df.empty:
@@ -359,16 +359,16 @@ def display_budget_comparative():
                              error="Nie udało się pobrać danych porównawczych budżetu miast",
                              charts=[])
 
-    # Generowanie wykresu porównawczego na podstawie kolumny 'na mieszkańca'
+    
     charts = [create_comparative_budget_chart(df, y_col='na mieszkańca', title_suffix='Budżet na Mieszkańca')]
     
-    # Możesz dodać więcej wykresów, np. porównanie zgłoszonych projektów
+    
     charts.append(create_comparative_budget_chart(df, y_col='Zgłoszone projekty', title_suffix='Liczba Zgłoszonych Projektów'))
     
-    # Filtruj None'y
+    
     charts = [chart for chart in charts if chart is not None]
 
-    # Obliczenie ogólnych statystyk dla sekcji statystyk (na potrzeby szablonu)
+   
     stats = {
         'total_cities': len(df),
         'total_budget': f"{(df['Zplanowana kwota'].sum() / 1_000_000):.2f}" if 'Zplanowana kwota' in df.columns else "N/A",
@@ -435,17 +435,16 @@ CHART_CONFIGS = {
                 'colors': ['red', 'blue'],
                 'labels': ['Kobiety', 'Mężczyźni'],
                 'title': 'Wiek populacji w społeczeństwie w podziale na płeć',
-                'x_ticks_step': 5,  # Pokazuj co 5 rok
-                'width_scale': 1.5  # Szerokość wykresu
+                'x_ticks_step': 5,  
+                'width_scale': 1.5  
             }
         ]
     },
-    # --- NOWA KONFIGURACJA DLA BUDŻETU OBYWATELSKIEGO PŁOCKA ---
-    # ZASTĄP SEKCJE 'BudzetObywatelskiPlock_Wykresy' w Twoim słowniku CHART_CONFIGS tym poniżej:
+
 'BudzetObywatelskiPlock_Wykresy': {
     'time_series_multi': [ 
         {
-            # Wykres 1: Frekwencja (Pozostaje słupkowy, ale z korektą tytułu i opisu)
+            
             'x_column': 'Rok głosowania',
             'y_columns': [
                 'Frekwencja w %',
@@ -455,10 +454,10 @@ CHART_CONFIGS = {
             'title': 'Frekwencja w głosowaniach na Budżet Obywatelski w Płocku',
             'ylabel': 'Frekwencja w %',
             'description': 'Zmiana frekwencji w Budżecie Obywatelskim na przestrzeni lat.',
-            'chart_type': 'bar_single' # Zmieniono z 'line_with_bar' na 'bar_single'
+            'chart_type': 'bar_single' 
         },
         {
-            # Wykres 2: Udział mieszkańców (Zmieniony na słupkowy - bar_multi)
+            
             'x_column': 'Rok głosowania',
             'y_columns': [
                 'Liczba uprawnionych do głosowania',
@@ -469,23 +468,23 @@ CHART_CONFIGS = {
             'title': 'Udział mieszkańców w głosowaniu na BO',
             'ylabel': 'Liczba osób',
             'description': 'Porównanie liczby uprawnionych do głosowania z faktyczną liczbą głosujących ogółem (wykres słupkowy).',
-            'chart_type': 'bar_multi' # Zmieniono z 'multi_line' na 'bar_multi'
+            'chart_type': 'bar_multi' 
         },
         {
-            # Wykres 3: Kwota BO (Zmieniony tytuł, typ na bar_single)
+           
             'x_column': 'Rok głosowania',
             'y_columns': [
                 'Kwota przeznaczona na realizację BO w zł'
             ],
             'colors': ['#f39c12'], 
             'labels': ['Kwota BO'],
-            'title': 'Kwoty przeznaczone na budżet obywatelski', # ZMIANA TYTUŁU
+            'title': 'Kwoty przeznaczone na budżet obywatelski', 
             'ylabel': 'Kwota w zł',
             'description': 'Trend kwoty przeznaczonej na realizację Budżetu Obywatelskiego w kolejnych latach (wykres słupkowy).',
-            'chart_type': 'bar_single' # Zmieniono z 'bar' na 'bar_single'
+            'chart_type': 'bar_single' 
         },
         {
-            # Wykres 4: Proces weryfikacji projektów (Zmieniony na słupkowy grupowany - bar_multi)
+            
             'x_column': 'Rok głosowania',
             'y_columns': [
                 'Liczba projektów złożonych ogółem',
@@ -497,7 +496,7 @@ CHART_CONFIGS = {
             'title': 'Proces weryfikacji projektów BO',
             'ylabel': 'Liczba projektów',
             'description': 'Liczba projektów złożonych, pozytywnie zweryfikowanych i ostatecznie wybranych do realizacji (wykres słupkowy grupowany).',
-            'chart_type': 'bar_multi' # Zmieniono z 'multi_line' na 'bar_multi'
+            'chart_type': 'bar_multi' 
         }
     ]
 },
@@ -518,7 +517,7 @@ def get_bo_plock_data_for_charts():
         for col in df.columns:
             if df[col].dtype == 'object':
                 try:
-                    # Zamień przecinek na kropkę, usuń spacje i przekonwertuj na float
+                    
                     df[col] = df[col].astype(str).str.replace(' ', '', regex=False).str.replace(',', '.', regex=False)
                     df[col] = pd.to_numeric(df[col], errors='coerce') 
                 except:
@@ -538,17 +537,17 @@ def create_bo_plock_time_series_chart(df, x_col, y_cols, table_name, title, colo
     try:
         df = df.sort_values(by=x_col).dropna(subset=[x_col] + y_cols)
         
-        # Ustalenie rozmiaru wykresu
+       
         base_width = 12
         calculated_width = max(base_width, len(df) * 0.8) 
         plt.figure(figsize=(calculated_width, 7))
         
-        # Słupki będą miały szerokość 0.8 / (liczba serii)
+        
         N = len(df)
         ind = np.arange(N)
         width = 0.8 / len(y_cols)
         
-        # Formater dla dużych liczb (z zerami na końcu)
+  
         def format_y_value(val):
             if val >= 1000:
                 return f"{val:,.0f}".replace(",", " ").replace(".0", "")
@@ -556,7 +555,7 @@ def create_bo_plock_time_series_chart(df, x_col, y_cols, table_name, title, colo
 
         
         if chart_type == 'multi_line':
-            # WYKRES LINIOWY (zachowany na wypadek, gdyby był potrzebny)
+            
             for i, y_col in enumerate(y_cols):
                 color = colors[i % len(colors)]
                 label = labels[i % len(labels)]
@@ -565,14 +564,14 @@ def create_bo_plock_time_series_chart(df, x_col, y_cols, table_name, title, colo
             plt.legend(loc='best', fontsize=10)
         
         elif chart_type == 'bar_single':
-            # WYKRES SŁUPKOWY POJEDYNCZY (Kwota, Frekwencja)
+           
             y_col = y_cols[0]
             color = colors[0]
             label = labels[0]
             
             bars = plt.bar(df[x_col], df[y_col], color=color, alpha=0.8, label=label, width=0.6)
 
-            # Dodanie wartości na słupkach
+            
             for bar in bars:
                 yval = bar.get_height()
                 plt.text(bar.get_x() + bar.get_width()/2.0, yval, 
@@ -580,29 +579,26 @@ def create_bo_plock_time_series_chart(df, x_col, y_cols, table_name, title, colo
                          ha='center', va='bottom', fontsize=10, rotation=45 if 'Kwota' in y_col else 0)
 
         elif chart_type == 'bar_multi':
-            # WYKRES SŁUPKOWY GRUPOWANY (Udział, Projekty)
-            
-            # Tworzenie grup słupków obok siebie
+
             for i, y_col in enumerate(y_cols):
                 color = colors[i % len(colors)]
                 label = labels[i % len(labels)]
                 
-                # Przesunięcie słupka w ramach grupy
+
                 current_ind = ind + i * width - (len(y_cols) - 1) * width / 2
                 bars = plt.bar(current_ind, df[y_col], width, color=color, alpha=0.8, label=label)
 
-                # Dodanie wartości na słupkach
+
                 for bar in bars:
                     yval = bar.get_height()
                     plt.text(bar.get_x() + bar.get_width()/2.0, yval, 
                              format_y_value(yval), 
-                             ha='center', va='bottom', fontsize=8, color='black') # Mniejsza czcionka dla lepszej czytelności w grupach
-            
-            # Ustawienie etykiet X na środek grup
+                             ha='center', va='bottom', fontsize=8, color='black') 
+
             plt.xticks(ind, df[x_col].unique(), rotation=45, fontsize=10)
             plt.legend(loc='best', fontsize=10)
             
-        else: # Domyślnie - powrót do multi_line jeśli nieznany typ
+        else: 
              for i, y_col in enumerate(y_cols):
                 color = colors[i % len(colors)]
                 label = labels[i % len(labels)]
@@ -616,7 +612,7 @@ def create_bo_plock_time_series_chart(df, x_col, y_cols, table_name, title, colo
         plt.ylabel(ylabel, fontsize=12)
         plt.grid(True, axis='y', alpha=0.3)
         
-        # Koniec
+    
         plt.tight_layout(pad=3.0)
         
         chart_info = save_chart_to_base64(table_name, title)
@@ -633,9 +629,9 @@ def create_bo_plock_time_series_chart(df, x_col, y_cols, table_name, title, colo
 
 @main.route('/budzet_obywatelski_plock_dashboard', methods=['GET'])
 def display_budget_plock_dashboard():
-    """Wyświetla wykresy i statystyki dla tabeli BudzetObywatelskiPlock."""
     
-    # 1. Pobieranie danych (nowa funkcja)
+    
+   
     df = get_bo_plock_data_for_charts()
     
     if df is None or df.empty:
@@ -644,7 +640,7 @@ def display_budget_plock_dashboard():
                              charts=[],
                              page_title="Budżet Obywatelski Płocka")
     
-    # 2. Generowanie wykresów (nowa konfiguracja i funkcja)
+
     charts = []
     config = CHART_CONFIGS.get('BudzetObywatelskiPlock_Wykresy')
     
@@ -669,7 +665,7 @@ def display_budget_plock_dashboard():
                     'chart_data': chart['chart_data']
                 })
                 
-    # 3. Obliczanie statystyk (dla górnego panelu)
+
     total_budget = df['Kwota przeznaczona na realizację BO w zł'].sum()
     total_voters = df['Liczba głosujących ogółem'].sum()
     avg_frekwencja = df['Frekwencja w %'].mean()
@@ -685,8 +681,7 @@ def display_budget_plock_dashboard():
         'avg_frekwencja': f"{avg_frekwencja:.2f}%",
         'data_range': f"{min_year} - {max_year}",
     }
-    
-    # 4. Renderowanie
+
     return render_template('chart_dashboard.html', 
                          charts=charts, 
                          stats=stats, 
@@ -708,7 +703,7 @@ def display_budget_plock_dashboard():
 
 
 def get_data_demografia_simulation():
-    """Symuluje pobranie danych demograficznych."""
+   
     return [
         {'lata': 1950, 'ludnosc_ogolem': 33128, 'urodzenia_zywe': 953, 'zgony_ogolem': 388, 'przyrost_naturalny_na_1000': 17.0, 'saldo_migracji': 1015},
         {'lata': 1965, 'ludnosc_ogolem': 54952, 'urodzenia_zywe': 901, 'zgony_ogolem': 365, 'przyrost_naturalny_na_1000': 10.0, 'saldo_migracji': 1970},
@@ -721,9 +716,8 @@ def get_data_demografia_simulation():
         {'lata': 2023, 'ludnosc_ogolem': 111190, 'urodzenia_zywe': 654, 'zgony_ogolem': 1394, 'przyrost_naturalny_na_1000': -6.6, 'saldo_migracji': -471},
     ]
 
-# --- DANE DLA BUDŻETU (NOWE) ---
+
 def get_data_budzet_simulation():
-    """Symuluje pobranie danych budżetowych z bazy SQL dla wykresów kołowych."""
     return {
         'year': 2024,
         'dochody': {
@@ -757,7 +751,7 @@ def get_data_budzet_simulation():
     }
 
 
-# --- DANE DLA ŚRODOWISKA ---
+
 def get_data_srodowisko_simulation():
     """Symuluje pobranie danych środowiskowych."""
     return [
@@ -769,7 +763,7 @@ def get_data_srodowisko_simulation():
         {'miesiac': 'Cze', 'pm10_avg': 18, 'energia_kwh': 75000, 'hałas': 61},
     ]
 
-# --- DANE DLA TRANSPORTU ---
+
 def get_data_transport_simulation():
     """Symuluje pobranie danych dotyczących mobilności."""
     return [
@@ -782,9 +776,6 @@ def get_data_transport_simulation():
     ]
 
 
-# ==============================================================================
-# 2. LOGIKA PRZETWARZANIA DANYCH I ANALIZA AI
-# ==============================================================================
 
 def calculate_summary_demografia(data):
     """Generuje kluczowe statystyki dla bloku AI (strona główna)."""
@@ -853,7 +844,7 @@ def calculate_summary_transport(data):
         'punktualnosc_km': 98.2,
         'wypadki_miesiac': latest_data['wypadki'],
         'srednia_predkosc': 32,
-        'sciezki_km': 78, # Stała wartość dla demo
+        'sciezki_km': 78, 
         'komentarz_ai': komentarz_ai,
         'najnowszy_rok': latest_data['miesiac']
     }
@@ -884,9 +875,7 @@ def prepare_budget_chart_data(budget_data):
     return chart_data
 
 
-# ==============================================================================
-# 3. FUNKCJE WIDOKU (ROUTES)
-# ==============================================================================
+
 
 @main.route('/')
 def index():
@@ -927,7 +916,7 @@ def index():
 
 @main.route('/budzet')
 def budzet():
-    # --- BUDŻET (NOWA TRASA) ---
+    # --- BUDŻET 
     budget_data_raw = get_data_budzet_simulation()
     chart_data = prepare_budget_chart_data(budget_data_raw)
     
@@ -1056,56 +1045,55 @@ def utworz_wykres_base64():
     lata = [row[0] for row in dane]
     liczby = [row[1] for row in dane]
     
-    # Stwórz figurę z lepszymi proporcjami
+    
     fig, ax = plt.subplots(figsize=(12, 7))
     
-    # Utwórz gradient kolorów dla słupków
+    
     colors = plt.cm.viridis([(i / len(lata)) for i in range(len(lata))])
     
-    # Stwórz słupki z cieniami i zaokrąglonymi krawędziami
+   
     bars = ax.bar(lata, liczby, color=colors, edgecolor='white', 
                   linewidth=2, width=0.7, alpha=0.9)
-    
-    # Dodaj cienie dla głębi
+
     for bar in bars:
         bar.set_zorder(3)
     
-    # Formatowanie osi
+ 
     ax.set_xlabel('Rok', fontsize=14, fontweight='bold', color='#333333')
     ax.set_ylabel('Liczba wykroczeń drogowych', fontsize=14, fontweight='bold', color='#333333')
     ax.set_title('Wykroczenia drogowe w latach 2020-2023', 
                  fontsize=16, fontweight='bold', pad=20, color='#222222')
     
-    # Wymuś liczby całkowite na osi X (lata)
+   
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     
-    # Wymuś liczby całkowite na osi Y
+
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     
-    # Ulepszony grid
+  
     ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.8, color='gray', zorder=0)
     ax.set_axisbelow(True)
     
-    # Usuń górną i prawą ramkę
+    
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_linewidth(1.5)
     ax.spines['bottom'].set_linewidth(1.5)
     
-    # Wartości nad słupkami z lepszym stylem
+
     for i, v in enumerate(liczby):
         ax.text(lata[i], v + (max(liczby) * 0.02), f'{v:,}'.replace(',', ' '), 
                 ha='center', va='bottom', fontweight='bold', 
                 fontsize=12, color='#222222')
     
-    # Dodaj margines na górze
+  
     ax.set_ylim(0, max(liczby) * 1.15)
     
-    # Ustaw białe tło
+
     fig.patch.set_facecolor('white')
     ax.set_facecolor('#f8f9fa')
     
-    # Zapisz do pamięci jako Base64
+   
     img = io.BytesIO()
     plt.savefig(img, format='png', bbox_inches='tight', dpi=150, facecolor='white')
     img.seek(0)
@@ -1115,7 +1103,6 @@ def utworz_wykres_base64():
     
     return plot_url
 
-#WypadkiDrogowe
 @main.route('/transportChart')
 def transChart():
     wykres_base64 = utworz_wykres_base64()
@@ -1126,25 +1113,24 @@ def transChart():
 
 
 def create_chart():
-    # Pobierz dane z bazy
+
     conn = pyodbc.connect(connection_string_2)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM StatystykiWypadkow ORDER BY Lata")
     
-    # Wczytaj dane
+ 
     rows = cursor.fetchall()
     conn.close()
     
-    # Przygotuj dane do wykresu
     lata = [row[0] for row in rows]
     ilosc_wypadkow = [row[1] for row in rows]
     ilosc_zabitych = [row[2] for row in rows]
     ilosc_rannych = [row[3] for row in rows]
     
-    # Utwórz wykres
+   
     plt.figure(figsize=(14, 8))
     
-    # Dodaj linie dla każdej serii danych
+
     plt.plot(lata, ilosc_wypadkow, marker='o', linewidth=2.5, 
              markersize=8, label='Liczba wypadków', color='#2E86AB')
     plt.plot(lata, ilosc_zabitych, marker='s', linewidth=2.5, 
@@ -1152,7 +1138,7 @@ def create_chart():
     plt.plot(lata, ilosc_rannych, marker='^', linewidth=2.5, 
              markersize=8, label='Liczba rannych', color='#F18F01')
     
-    # Dostosuj wygląd wykresu
+   
     plt.title('Statystyki wypadków drogowych (2014-2023)', 
               fontsize=20, fontweight='bold', pad=20)
     plt.xlabel('Rok', fontsize=14, fontweight='bold')
@@ -1162,12 +1148,11 @@ def create_chart():
     plt.xticks(lata, rotation=45)
     plt.tight_layout()
     
-    # Ustaw styl tła
+    
     ax = plt.gca()
     ax.set_facecolor('#F8F9FA')
     plt.gcf().patch.set_facecolor('white')
-    
-    # Konwertuj wykres do base64
+  
     img = io.BytesIO()
     plt.savefig(img, format='png', dpi=150, bbox_inches='tight')
     img.seek(0)
@@ -1180,3 +1165,271 @@ def create_chart():
 def transChart12():
     plot_url = create_chart()
     return render_template('transChart1.html', plot_url=plot_url)
+
+
+@main.route('/analyze', methods=['GET','POST'])
+def analyze():
+
+    
+    model_path = r"C:\Users\wikto\Desktop\eStatistics_Plock\app\ai_mod\model_ludnosc_plock.pkl"
+
+    with open(model_path, 'rb') as f:
+        model_package = pickle.load(f)
+    model = model_package['model']
+    scaler = model_package['scaler']
+    features = model_package['feature_columns']
+
+    try:
+        years_ahead = int(request.form['years'])
+    except:
+        years_ahead = 1 # domyślnie 1 lat
+
+    current_year = datetime.now().year
+    future_years = range(current_year, current_year + years_ahead + 1)
+    predictions = []
+
+    for i, year in enumerate(future_years):
+        year_data = {
+            'Lata_od_1950': year - 1950,
+            'Trend': 38 + i,  # kontynuacja trendu z danych historycznych (1950–2023 = 38 punktów)
+            'Malzenstwa': 430,
+            'Urodzenia_zywe': 620 - i * 10,
+            'Zgony_ogolem': 1400 + i * 5,
+            'Przyrost_naturalny': -780 - i * 20,
+            'Ogolne_saldo_migracji': -480
+        }
+
+        X_future = pd.DataFrame([year_data])[features]
+        X_future_scaled = scaler.transform(X_future)
+        prediction = model.predict(X_future_scaled)[0]
+
+        predictions.append({
+            'rok': year,
+            'prognoza': round(prediction)
+        })
+
+    return render_template('ress.html', predictions=predictions)
+
+
+
+
+
+
+
+# class WeatherAPI:
+#     def __init__(self):
+#         self.api_key = "382a9d5099b6d49049192028936d1bfd"  # Twój klucz API
+#         self.base_url = "http://api.openweathermap.org/data/2.5"
+    
+#     def get_city_coordinates(self, city="Płock"):
+#         """Pobiera współrzędne geograficzne dla danego miasta"""
+#         try:
+#             geo_url = f"{self.base_url}/weather"
+#             geo_params = {
+#                 'q': city,
+#                 'appid': self.api_key,
+#                 'units': 'metric',
+#                 'lang': 'pl'
+#             }
+            
+#             response = requests.get(geo_url, params=geo_params)
+#             data = response.json()
+            
+#             if response.status_code == 200:
+#                 return {
+#                     'lat': data['coord']['lat'],
+#                     'lon': data['coord']['lon'],
+#                     'city_name': data['name'],
+#                     'country': data['sys']['country']
+#                 }
+#             else:
+#                 return None
+#         except Exception as e:
+#             print(f"Błąd podczas pobierania współrzędnych: {e}")
+#             return None
+    
+#     def get_air_quality(self, city="Warsaw"):
+#         """Pobiera kompleksowe dane o jakości powietrza i pogodzie"""
+#         try:
+#             # Pobierz współrzędne miasta
+#             coords  = self.get_city_coordinates(city.replace("ł", "l").replace("Ł", "L"))
+
+#             if not coords:
+#                 return self.get_mock_data()
+            
+#             lat = coords['lat']
+#             lon = coords['lon']
+            
+#             # Pobierz jakość powietrza
+#             air_url = f"{self.base_url}/air_pollution"
+#             air_params = {
+#                 'lat': lat,
+#                 'lon': lon,
+#                 'appid': self.api_key
+#             }
+            
+#             air_response = requests.get(air_url, params=air_params)
+            
+#             if air_response.status_code != 200:
+#                 return self.get_mock_data()
+            
+#             air_data = air_response.json()
+            
+#             # Pobierz aktualną pogodę
+#             weather_url = f"{self.base_url}/weather"
+#             weather_params = {
+#                 'lat': lat,
+#                 'lon': lon,
+#                 'appid': self.api_key,
+#                 'units': 'metric',
+#                 'lang': 'pl'
+#             }
+            
+#             weather_response = requests.get(weather_url, params=weather_params)
+            
+#             if weather_response.status_code != 200:
+#                 return self.get_mock_data()
+            
+#             weather_data = weather_response.json()
+            
+#             return self.format_complete_data(air_data, weather_data, coords)
+                
+#         except Exception as e:
+#             print(f"Błąd podczas pobierania danych: {e}")
+#             return self.get_mock_data()
+    
+#     def format_complete_data(self, air_data, weather_data, coords):
+#         """Formatuje kompletne dane o jakości powietrza i pogodzie"""
+#         if not air_data or 'list' not in air_data or len(air_data['list']) == 0:
+#             return self.get_mock_data()
+        
+#         current_air = air_data['list'][0]
+#         components = current_air['components']
+#         aqi = current_air['main']['aqi']
+        
+#         # Mapowanie AQI na opisy
+#         aqi_levels = {
+#             1: {"level": "Bardzo Dobry", "color": "#00e400", "description": "Jakość powietrza jest doskonała", "emoji": "😊"},
+#             2: {"level": "Dobry", "color": "#ffff00", "description": "Jakość powietrza jest dobra", "emoji": "🙂"},
+#             3: {"level": "Umiarkowany", "color": "#ff7e00", "description": "Jakość powietrza akceptowalna", "emoji": "😐"},
+#             4: {"level": "Zły", "color": "#ff0000", "description": "Zła jakość powietrza", "emoji": "😷"},
+#             5: {"level": "Bardzo Zły", "color": "#8f3f97", "description": "Bardzo zła jakość powietrza", "emoji": "⚠️"}
+#         }
+        
+#         aqi_info = aqi_levels.get(aqi, aqi_levels[3])
+        
+#         # Formatowanie danych pogodowych
+#         weather_info = {
+#             'temp': round(weather_data['main']['temp']),
+#             'feels_like': round(weather_data['main']['feels_like']),
+#             'humidity': weather_data['main']['humidity'],
+#             'pressure': weather_data['main']['pressure'],
+#             'wind_speed': weather_data['wind']['speed'],
+#             'description': weather_data['weather'][0]['description'].capitalize(),
+#             'icon': weather_data['weather'][0]['icon'],
+#             'visibility': weather_data.get('visibility', 0) / 1000 if weather_data.get('visibility') else 0
+#         }
+        
+#         formatted_data = {
+#             'city': coords['city_name'],
+#             'country': coords['country'],
+#             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#             'aqi': {
+#                 'value': aqi,
+#                 'level': aqi_info['level'],
+#                 'color': aqi_info['color'],
+#                 'description': aqi_info['description'],
+#                 'emoji': aqi_info['emoji']
+#             },
+#             'components': {
+#                 'pm2_5': {
+#                     'value': components.get('pm2_5', 0),
+#                     'unit': 'μg/m³',
+#                     'name': 'PM2.5',
+#                     'description': 'Drobny pył zawieszony'
+#                 },
+#                 'pm10': {
+#                     'value': components.get('pm10', 0),
+#                     'unit': 'μg/m³',
+#                     'name': 'PM10',
+#                     'description': 'Gruby pył zawieszony'
+#                 },
+#                 'no2': {
+#                     'value': components.get('no2', 0),
+#                     'unit': 'μg/m³',
+#                     'name': 'NO₂',
+#                     'description': 'Dwutlenek azotu'
+#                 },
+#                 'so2': {
+#                     'value': components.get('so2', 0),
+#                     'unit': 'μg/m³',
+#                     'name': 'SO₂',
+#                     'description': 'Dwutlenek siarki'
+#                 },
+#                 'o3': {
+#                     'value': components.get('o3', 0),
+#                     'unit': 'μg/m³',
+#                     'name': 'O₃',
+#                     'description': 'Ozon'
+#                 },
+#                 'co': {
+#                     'value': components.get('co', 0),
+#                     'unit': 'μg/m³',
+#                     'name': 'CO',
+#                     'description': 'Tlenek węgla'
+#                 }
+#             },
+#             'weather': weather_info
+#         }
+        
+#         return formatted_data
+    
+#     def get_mock_data(self):
+#         """Zwraca przykładowe dane gdy API nie działa"""
+#         return {
+#             'city': 'Płock',
+#             'country': 'PL',
+#             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#             'aqi': {
+#                 'value': 2,
+#                 'level': 'Dobry',
+#                 'color': '#ffff00',
+#                 'description': 'Jakość powietrza jest dobra',
+#                 'emoji': '🙂'
+#             },
+#             'components': {
+#                 'pm2_5': {'value': 15.4, 'unit': 'μg/m³', 'name': 'PM2.5', 'description': 'Drobny pył zawieszony'},
+#                 'pm10': {'value': 28.2, 'unit': 'μg/m³', 'name': 'PM10', 'description': 'Gruby pył zawieszony'},
+#                 'no2': {'value': 12.7, 'unit': 'μg/m³', 'name': 'NO₂', 'description': 'Dwutlenek azotu'},
+#                 'so2': {'value': 2.2, 'unit': 'μg/m³', 'name': 'SO₂', 'description': 'Dwutlenek siarki'},
+#                 'o3': {'value': 52.1, 'unit': 'μg/m³', 'name': 'O₃', 'description': 'Ozon'},
+#                 'co': {'value': 180.5, 'unit': 'μg/m³', 'name': 'CO', 'description': 'Tlenek węgla'}
+#             },
+#             'weather': {
+#                 'temp': 18,
+#                 'feels_like': 17,
+#                 'humidity': 65,
+#                 'pressure': 1015,
+#                 'wind_speed': 3.5,
+#                 'description': 'Lekkie zachmurzenie',
+#                 'icon': '03d',
+#                 'visibility': 10
+#             }
+#         }
+
+# @main.route('/weather')
+# def air_quality():
+#     """Główna strona z jakością powietrza"""
+#     city = request.args.get('city', 'Płock')
+#     weather_api = WeatherAPI()
+#     air_data = weather_api.get_air_quality(city)
+#     return render_template('procApi.html', air_data=air_data)
+
+
+
+
+
+
+
+
+

@@ -362,46 +362,52 @@ h2 { font-size: 1.4em; font-weight: 600; margin-bottom: 15px; color: var(--color
 </head>
 <body>
     
-    <div class="navigation-wrap">
-        <div class="container">
-            <nav class="navbar">  
-                <img src="{{ url_for('static', filename='plocklogo.png') }}" alt="Płock Logo">
-                <a class="navbar-brand" href="/">
-                    Miejskie<span> Centrum &nbsp;</span> Danych &nbsp;
-                </a>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item has-dropdown {% if request.path == '/' %}active{% endif %}">
-                       <a class="nav-link" href="/">Demografia</a>
-                       <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('main.displayData') }}">Dane w przyjaznej formie</a></li>
-                       </ul>
-                    </li>
-                    <li class="nav-item has-dropdown {% if request.path == '/srodowisko' %}active{% endif %}">
-                        <a class="nav-link" href="/srodowisko">Środowisko</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="/srodowisko/pm10">Dane środowiskowe</a></li>>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-dropdown {% if request.path == '/transport' %}active{% endif %}"> 
-                        <a class="nav-link" >Transport</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{{url_for('main.transChart')}}">Statystyki wykroczeń drogowych dla Płocka</a></li>
-                            <li><a href="{{url_for('main.transChart12')}}">Statystyki Wypadków drogawych</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-dropdown {% if request.path == '/budzet' %}active{% endif %}">
-                        <a class="nav-link" href="/budzet">Budżet</a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{{ url_for('main.display_budget_plock_dashboard') }}">Statystyki dla budżetu obywatelskiego w Płocku</a></li>
-                            <li><a href="{{ url_for('main.display_budget_comparative') }}">Budżet Płocka na tle innych miast</a></li>
+   <div class="navigation-wrap">
+    <div class="container">
+        <nav class="navbar">
+            <img src="{{ url_for('static', filename='plocklogo.png') }}" alt="Płock Logo">
+            <a class="navbar-brand" href="/">
+                Miejskie<span> Centrum &nbsp;</span> Danych &nbsp;
+            </a>
 
-                        </ul>
-                    </li>
-                </ul>
-            </nav>      
-        </div>
+            <ul class="navbar-nav">
+                <li class="nav-item has-dropdown {% if request.path == '/' %}active{% endif %}">
+                    <a class="nav-link" href="/">Demografia</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('main.displayData') }}">Dane w przyjaznej formie</a></li>
+                        
+                    </ul>
+                </li>
+
+                <li class="nav-item has-dropdown {% if request.path == '/srodowisko' %}active{% endif %}">
+                    <a class="nav-link" href="/srodowisko">Środowisko</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="https://aqicn.org/map/plock/pl">Jakość Powietrza</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item has-dropdown {% if request.path == '/transport' %}active{% endif %}">
+                    <a class="nav-link" href="#">Transport</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{url_for('main.transChart')}}">Statystyki wykroczeń drogowych dla Płocka</a></li>
+                        <li><a href="{{url_for('main.transChart12')}}">Statystyki Wypadków drogawych</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item has-dropdown {% if request.path == '/budzet' %}active{% endif %}">
+                    <a class="nav-link" href="/budzet">Budżet</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('main.display_budget_plock_dashboard') }}">Statystyki dla budżetu obywatelskiego w Płocku</a></li>
+                        <li><a href="{{ url_for('main.display_budget_comparative') }}">Budżet Płocka na tle innych miast</a></li>
+                    </ul>
+                </li>
+                                <li class="nav-item has-dropdown {% if request.path == '/Dane Przyszłości' %}active{% endif %}">
+                    <a class="nav-link" href="{{url_for('main.analyze')}}">Dane Przyszłości</a>
+                </li>
+            </ul>
+        </nav>
     </div>
+</div>
     
 <div class="container">
     <hr> 
@@ -453,7 +459,7 @@ h2 { font-size: 1.4em; font-weight: 600; margin-bottom: 15px; color: var(--color
      
 
             <div class="summary-metric">
-          <a href="#" class="button-action" style="width: 100%; text-align: center; background-color: var(--color-iot-main);  PADDING-BLOCK: 3px; margin: 10px 0px 0px 10px; display: flex; ">Mapa Czujników IoT</a>
+          <a href="https://aqicn.org/map/plock/pl" class="button-action" style="width: 100%; text-align: center; background-color: var(--color-iot-main);  PADDING-BLOCK: 3px; margin: 10px 0px 0px 10px; display: flex; ">Mapa Czujników IoT</a>
         </div>
         </div>
         
