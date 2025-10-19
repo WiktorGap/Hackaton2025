@@ -13,11 +13,29 @@ import random
 from io import StringIO
 import json
 import csv
+from matplotlib.ticker import MaxNLocator
 
 connection_string_ = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
     r'SERVER=THINKBOOK_CODE;'
     r'DATABASE=Hackaton;'
+    r'Trusted_Connection=yes;'
+)
+
+
+connection_string_1 = (
+    r'DRIVER={ODBC Driver 17 for SQL Server};'
+    r'SERVER=THINKBOOK_CODE;'
+    r'DATABASE=wykroczeniadrogowe;'
+    r'Trusted_Connection=yes;'
+)
+
+
+
+connection_string_2 = (
+    r'DRIVER={ODBC Driver 17 for SQL Server};'
+    r'SERVER=THINKBOOK_CODE;'
+    r'DATABASE=WypadkiDrogowe;'
     r'Trusted_Connection=yes;'
 )
 
@@ -1007,3 +1025,158 @@ def export_data():
     output = Response(si.getvalue(), mimetype='text/csv')
     output.headers["Content-Disposition"] = "attachment; filename=urbandata_plock_statystyki_SQL.csv"
     return output
+
+
+def pobierz_dane_z_bazy():
+    """Pobiera dane z bazy SQL Server"""
+    server = 'localhost'
+    database = 'WykroczeniaDrogowe'
+    
+    conn_string = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};Trusted_Connection=yes;'
+    
+    try:
+        conn = pyodbc.connect(connection_string_1)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Rok, LiczbaWykroczeniDrogowych FROM WykroczeniaDrogowe ORDER BY Rok")
+        dane = cursor.fetchall()
+        conn.close()
+        return dane
+    except Exception as e:
+        print(f"Błąd: {e}")
+        return None
+
+
+def utworz_wykres_base64():
+    """Tworzy wykres i zwraca jako string Base64"""
+    dane = pobierz_dane_z_bazy()
+    
+    if not dane:
+        return None
+    
+    lata = [row[0] for row in dane]
+    liczby = [row[1] for row in dane]
+    
+    # Stwórz figurę z lepszymi proporcjami
+    fig, ax = plt.subplots(figsize=(12, 7))
+    
+    # Utwórz gradient kolorów dla słupków
+    colors = plt.cm.viridis([(i / len(lata)) for i in range(len(lata))])
+    
+    # Stwórz słupki z cieniami i zaokrąglonymi krawędziami
+    bars = ax.bar(lata, liczby, color=colors, edgecolor='white', 
+                  linewidth=2, width=0.7, alpha=0.9)
+    
+    # Dodaj cienie dla głębi
+    for bar in bars:
+        bar.set_zorder(3)
+    
+    # Formatowanie osi
+    ax.set_xlabel('Rok', fontsize=14, fontweight='bold', color='#333333')
+    ax.set_ylabel('Liczba wykroczeń drogowych', fontsize=14, fontweight='bold', color='#333333')
+    ax.set_title('Wykroczenia drogowe w latach 2020-2023', 
+                 fontsize=16, fontweight='bold', pad=20, color='#222222')
+    
+    # Wymuś liczby całkowite na osi X (lata)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    # Wymuś liczby całkowite na osi Y
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    # Ulepszony grid
+    ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.8, color='gray', zorder=0)
+    ax.set_axisbelow(True)
+    
+    # Usuń górną i prawą ramkę
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['bottom'].set_linewidth(1.5)
+    
+    # Wartości nad słupkami z lepszym stylem
+    for i, v in enumerate(liczby):
+        ax.text(lata[i], v + (max(liczby) * 0.02), f'{v:,}'.replace(',', ' '), 
+                ha='center', va='bottom', fontweight='bold', 
+                fontsize=12, color='#222222')
+    
+    # Dodaj margines na górze
+    ax.set_ylim(0, max(liczby) * 1.15)
+    
+    # Ustaw białe tło
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('#f8f9fa')
+    
+    # Zapisz do pamięci jako Base64
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight', dpi=150, facecolor='white')
+    img.seek(0)
+    
+    plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+    plt.close()
+    
+    return plot_url
+
+#WypadkiDrogowe
+@main.route('/transportChart')
+def transChart():
+    wykres_base64 = utworz_wykres_base64()
+    return render_template('transChart.html', wykres=wykres_base64)
+
+
+
+
+
+def create_chart():
+    # Pobierz dane z bazy
+    conn = pyodbc.connect(connection_string_2)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM StatystykiWypadkow ORDER BY Lata")
+    
+    # Wczytaj dane
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Przygotuj dane do wykresu
+    lata = [row[0] for row in rows]
+    ilosc_wypadkow = [row[1] for row in rows]
+    ilosc_zabitych = [row[2] for row in rows]
+    ilosc_rannych = [row[3] for row in rows]
+    
+    # Utwórz wykres
+    plt.figure(figsize=(14, 8))
+    
+    # Dodaj linie dla każdej serii danych
+    plt.plot(lata, ilosc_wypadkow, marker='o', linewidth=2.5, 
+             markersize=8, label='Liczba wypadków', color='#2E86AB')
+    plt.plot(lata, ilosc_zabitych, marker='s', linewidth=2.5, 
+             markersize=8, label='Liczba zabitych', color='#A23B72')
+    plt.plot(lata, ilosc_rannych, marker='^', linewidth=2.5, 
+             markersize=8, label='Liczba rannych', color='#F18F01')
+    
+    # Dostosuj wygląd wykresu
+    plt.title('Statystyki wypadków drogowych (2014-2023)', 
+              fontsize=20, fontweight='bold', pad=20)
+    plt.xlabel('Rok', fontsize=14, fontweight='bold')
+    plt.ylabel('Liczba', fontsize=14, fontweight='bold')
+    plt.legend(loc='upper right', fontsize=12, framealpha=0.9)
+    plt.grid(True, alpha=0.3, linestyle='--')
+    plt.xticks(lata, rotation=45)
+    plt.tight_layout()
+    
+    # Ustaw styl tła
+    ax = plt.gca()
+    ax.set_facecolor('#F8F9FA')
+    plt.gcf().patch.set_facecolor('white')
+    
+    # Konwertuj wykres do base64
+    img = io.BytesIO()
+    plt.savefig(img, format='png', dpi=150, bbox_inches='tight')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
+    
+    return plot_url
+
+@main.route('/transChart12')
+def transChart12():
+    plot_url = create_chart()
+    return render_template('transChart1.html', plot_url=plot_url)

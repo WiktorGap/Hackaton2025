@@ -5,88 +5,212 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dane z bazy - Wykresy</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 0;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
         }
-        .chart-container {
-            margin: 30px 0;
+
+        .info-message {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
             padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fafafa;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5e9;
+            transition: all 0.3s ease;
         }
-        .chart-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
+
         .table-name {
-            font-size: 16px;
-            color: #666;
+            font-size: 0.9em;
+            color: #7f8c8d;
             margin-bottom: 5px;
         }
-        img {
+
+        .chart-title {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .chart-container {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .chart-container img {
             max-width: 100%;
             height: auto;
-            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e1e5e9;
         }
-        .error {
-            color: red;
-            padding: 10px;
-            background-color: #ffe6e6;
-            border: 1px solid red;
-            border-radius: 4px;
-        }
+
         .no-data {
-            color: #666;
+            text-align: center;
+            color: #7f8c8d;
             font-style: italic;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: #ecf0f1;
             text-align: center;
             padding: 20px;
+            font-size: 0.9em;
+        }
+
+        .back-button {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            font-weight: 500;
+        }
+
+        .back-button a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Wizualizacja danych z bazy MSSQL</h1>
-        
-        {% if error %}
-            <div class="error">
-                <strong>Błąd:</strong> {{ error }}
-            </div>
-        {% endif %}
-        
-        {% if charts_data %}
-            <p>Wygenerowano {{ charts_data|length }} wykresów z bazy danych.</p>
-            
-            {% for chart in charts_data %}
-                <div class="chart-container">
-                    <div class="table-name">Tabela: {{ chart.table_name }}</div>
-                    <div class="chart-title">{{ chart.chart_name }}</div>
-                    <img src="data:image/png;base64,{{ chart.chart_data }}" alt="Wykres {{ chart.chart_name }}">
+        <header>
+            <h1>Wizualizacja danych z bazy MSSQL</h1>
+        </header>
+
+        <div class="content">
+            {% if error %}
+                <div class="error">
+                    <strong>Błąd:</strong> {{ error }}
                 </div>
-            {% endfor %}
-        {% else %}
-            <div class="no-data">
-                {% if not error %}
-                    Brak danych do wyświetlenia lub nie udało się wygenerować wykresów.
-                {% endif %}
-            </div>
-        {% endif %}
-        
-        <div style="margin-top: 30px; text-align: center;">
-            <a href="{{ url_for('main.index') }}">Powrót do strony głównej</a>
+            {% endif %}
+            
+            {% if charts_data %}
+                <div class="info-message">
+                    Wygenerowano {{ charts_data|length }} wykresów z bazy danych.
+                </div>
+                
+                <div class="charts-grid">
+                    {% for chart in charts_data %}
+                        <div class="chart-card">
+                            <div class="table-name">Tabela: {{ chart.table_name }}</div>
+                            <div class="chart-title">{{ chart.chart_name }}</div>
+                            <div class="chart-container">
+                                <img src="data:image/png;base64,{{ chart.chart_data }}" alt="Wykres {{ chart.chart_name }}">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-data">
+                    {% if not error %}
+                        Brak danych do wyświetlenia lub nie udało się wygenerować wykresów.
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
+        
+        <footer>
+            <p>Źródło danych: Baza danych MSSQL</p>
+        </footer>
+    </div>
+    
+    <div class="back-button">
+        <a href="{{ url_for('main.index') }}">Powrót do strony głównej</a>
     </div>
 </body>
 </html>

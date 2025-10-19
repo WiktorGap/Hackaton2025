@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wykroczenia Drogowe - Wykres</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e1e5e9;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            margin: 0 30px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .info-box h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+
+        .back-button {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .back-button a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            font-weight: 500;
+        }
+
+        .back-button a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6em;
+            }
+            
+            .chart-container {
+                padding: 20px;
+            }
+            
+            .info-box {
+                margin: 0 20px 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Statystyki Wykroczeń Drogowych</h1>
+        </header>
+        
+        <div class="chart-container">
+            {% if wykres %}
+                <img src="data:image/png;base64,{{ wykres }}" alt="Wykres wykroczeń drogowych">
+            {% else %}
+                <p>Nie udało się wygenerować wykresu.</p>
+            {% endif %}
+        </div>
+        
+        <div class="info-box">
+            <p>Wykres przedstawia statystyki wykroczeń drogowych w analizowanym okresie</p>
+        </div>
+        
+        <footer>
+            <p>Źródło danych: System rejestracji wykroczeń</p>
+        </footer>
+    </div>
+    
+    <div class="back-button">
+        <a href="{{ url_for('main.index') }}">Powrót do strony głównej</a>
+    </div>
+</body>
+</html>
